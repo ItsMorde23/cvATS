@@ -3,440 +3,648 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Builder v6.0 - Print Fix & Menu</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>ATS-CV Builder Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root {
-            --primary: #2c3e50;
-            --active: #3b82f6;
-            --bg-editor: #f3f4f6;
-            --bg-preview: #52525b;
-            --border: #d1d5db;
-            --sidebar-width: 400px; /* Ancho fijo para control */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
         }
 
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-
-        /* --- BOTÓN DE MENÚ FLOTANTE --- */
-        .menu-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 2000;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: transform 0.3s;
-        }
-        .menu-toggle:hover { transform: scale(1.1); }
-        /* Ocultar el botón si el menú está abierto (opcional, aquí lo dejo siempre visible para alternar) */
-
-        /* --- EDITOR (ANIMADO) --- */
-        .editor-pane { 
-            width: var(--sidebar-width); 
-            background: var(--bg-editor); 
-            border-right: 1px solid var(--border); 
-            display: flex; 
-            flex-direction: column; 
-            z-index: 1000; 
-            transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            margin-left: 0; /* Estado abierto */
-            position: relative;
+        /* A4 Paper Dimensions */
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            margin: 0 auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 20mm; /* Standard margin */
+            box-sizing: border-box;
+            color: #000;
         }
 
-        /* Clase para cerrar el menú */
-        .editor-pane.closed {
-            margin-left: calc(var(--sidebar-width) * -1);
+        /* Editor Scrollbar styling */
+        .editor-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .editor-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .editor-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .editor-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
-        .editor-header { padding: 15px 20px 15px 60px; /* Padding extra a la izq para el boton */ background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .editor-content { flex: 1; overflow-y: auto; padding: 20px; }
-
-        /* Estilos generales del editor */
-        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-outline { background: white; border: 1px solid #ccc; color: #333; }
-        .btn-danger { background: #fee2e2; color: #b91c1c; }
-        
-        .section-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .section-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 15px; color: var(--primary); border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .form-control { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; margin-bottom: 10px; }
-        textarea.form-control { resize: vertical; min-height: 60px; font-family: inherit; }
-        .item-card { background: #f9fafb; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 8px; position: relative; }
-        .delete-btn { position: absolute; top: 8px; right: 8px; color: #ef4444; cursor: pointer; }
-        
-        /* Alineación y Toggle */
-        .align-group { display: flex; border-radius: 4px; overflow: hidden; margin-top: 10px; }
-        .align-btn { background: white; border: 1px solid #ccc; color: #555; padding: 8px 15px; cursor: pointer; flex: 1; }
-        .align-btn.active { background: var(--active); color: white; border-color: var(--active); }
-        .toggle-container { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; margin-bottom: 10px; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--active); }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        /* --- PREVIEW --- */
-        .preview-pane { 
-            flex: 1; /* Ocupa el resto del espacio */
-            background: var(--bg-preview); 
-            padding: 30px; 
-            overflow-y: auto; 
-            display: flex; 
-            justify-content: center; 
-            position: relative; 
-            transition: all 0.4s;
+        /* ATS Specific Styles for Preview */
+        .ats-name {
+            font-size: 24pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.2;
         }
-        
-        #resume-container { position: relative; box-shadow: 0 0 15px rgba(0,0,0,0.2); height: fit-content; }
-
-        #resume-preview {
-            background: white; width: 210mm; min-height: 297mm; padding: 20mm 20mm;
-            box-sizing: border-box; color: #000; position: relative; z-index: 1;
-            overflow: visible; /* IMPORTANTE: Evita scroll interno */
+        .ats-role {
+            font-size: 14pt;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .ats-contact {
+            font-size: 10pt;
+            margin-bottom: 20px;
+        }
+        .ats-section-title {
+            font-size: 12pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 2px;
+        }
+        .ats-text {
+            font-size: 10.5pt;
+            line-height: 1.4;
+        }
+        .ats-bold {
+            font-weight: 700;
         }
 
-        /* --- WATERMARK --- */
-        .watermark-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 999; pointer-events: none; display: flex; flex-wrap: wrap;
-            justify-content: center; align-content: center; overflow: hidden; opacity: 0.15;
-        }
-        .watermark-text { font-size: 24pt; font-weight: bold; color: red; transform: rotate(-45deg); margin: 50px; white-space: nowrap; user-select: none; }
-
-        /* --- MODAL PAGO --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 3000;
-            display: none; justify-content: center; align-items: center;
-        }
-        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        .pay-btn { background: #009ee3; color: white; padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
-        
-        /* --- ESTILOS DEL CV --- */
-        .cv-header-container { display: flex; gap: 25px; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 20px; }
-        .header-left { flex-direction: row; text-align: left; }
-        .header-center { flex-direction: column; align-items: center; text-align: center; }
-        .header-right { flex-direction: row-reverse; text-align: right; }
-        .cv-photo-box { width: 110px; height: 110px; border-radius: 50%; overflow: hidden; flex-shrink: 0; display: none; border: 1px solid #ccc; }
-        .cv-photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        .cv-photo-box.visible { display: block; }
-        .cv-header-text { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .cv-name { font-family: 'Arial', sans-serif; font-size: 28pt; font-weight: 800; text-transform: uppercase; color: #222; line-height: 1.1; margin-bottom: 8px; }
-        .cv-contact { font-family: 'Arial', sans-serif; font-size: 10pt; color: #444; line-height: 1.4; }
-        .cv-section-title { font-family: 'Arial', sans-serif; font-size: 13pt; font-weight: 700; text-transform: uppercase; border-bottom: 1px solid #ccc; margin-top: 20px; margin-bottom: 12px; padding-bottom: 2px; letter-spacing: 0.5px; }
-        .cv-item { margin-bottom: 14px; }
-        .cv-item-header { display: flex; justify-content: space-between; font-family: 'Arial', sans-serif; margin-bottom: 3px; align-items: baseline; }
-        .cv-role { font-weight: 700; font-size: 11.5pt; }
-        .cv-company { font-weight: 600; font-size: 11pt; color: #444; }
-        .cv-dates { font-size: 10pt; font-style: italic; text-align: right; min-width: 120px; }
-        .cv-list { margin: 4px 0 0 0; padding-left: 18px; font-family: 'Arial', sans-serif; font-size: 10.5pt; line-height: 1.45; color: #333; }
-        .cv-summary { font-family: 'Arial', sans-serif; font-size: 10.5pt; line-height: 1.5; text-align: left; color: #333; }
-        .cv-lang-list { list-style: none; padding: 0; margin: 0; font-family: 'Arial', sans-serif; font-size: 10.5pt; }
-        .cv-lang-item { margin-bottom: 4px; }
-        .cv-lang-name { font-weight: bold; }
-
-        /* --- SOLUCIÓN CRÍTICA DE IMPRESIÓN --- */
+        /* Print Media Query - PIXEL PERFECT */
         @media print {
-            body, html { 
-                height: auto !important; 
-                overflow: visible !important; 
-                background: white !important;
+            @page {
+                margin: 0;
+                size: A4;
             }
-            .editor-pane, .menu-toggle, .modal-overlay { 
-                display: none !important; 
+            body {
+                background: white;
+                height: 100%;
+                overflow: visible;
             }
-            .preview-pane { 
-                width: 100% !important; 
-                padding: 0 !important; 
-                margin: 0 !important; 
-                height: auto !important; 
-                overflow: visible !important;
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
                 display: block !important;
+                width: 100%;
+                height: 100%;
+                box-shadow: none;
+                margin: 0;
+                padding: 20mm; /* Force margins on print */
             }
-            #resume-container { 
-                box-shadow: none !important; 
-                overflow: visible !important;
-                margin: 0 !important;
+            /* Reset Tailwind defaults that might interfere */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
-            #resume-preview { 
-                width: 100% !important; 
-                padding: 0 !important; 
-                margin: 0 !important;
-                border: none !important;
-                overflow: visible !important; /* Clave para quitar barras */
-            }
-            /* Ocultar barras de scroll forzosamente */
-            ::-webkit-scrollbar { display: none; }
-            
-            @page { margin: 15mm 20mm; size: A4; }
         }
     </style>
 </head>
-<body>
-    
-    <button class="menu-toggle" onclick="app.toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
+<body class="h-screen flex flex-col md:flex-row overflow-hidden bg-gray-50 text-slate-800">
 
-    <div class="modal-overlay" id="paymentModal">
-        <div class="modal-content">
-            <h2 style="margin-top:0">Descarga Premium</h2>
-            <div style="font-size:2.5rem; color:var(--primary); font-weight:bold; margin:10px 0">$5.00</div>
-            <p style="color:#666">Quita la marca de agua y obtén formato limpio.</p>
-            <button class="pay-btn" onclick="app.processPayment()">Pagar ahora</button>
-            <button style="margin-top:10px; background:none; border:none; color:#888; cursor:pointer; text-decoration:underline" onclick="app.closeModal()">Volver</button>
-        </div>
-    </div>
+    <aside class="w-full md:w-5/12 lg:w-4/12 flex flex-col border-r border-gray-300 bg-gray-100 no-print z-10 shadow-lg">
+        
+        <div class="p-5 bg-white border-b border-gray-200 shadow-sm z-20">
+            <h1 class="text-xl font-bold text-slate-800 mb-1"><i class="fas fa-file-contract text-blue-600 mr-2"></i>ATS-CV Builder Pro</h1>
+            <p class="text-xs text-gray-500 mb-4">Optimizado para Sistemas de Rastreo de Candidatos</p>
+            
+            <div class="flex items-center justify-between bg-slate-100 p-2 rounded-lg border border-slate-200 mb-4">
+                <span class="text-xs font-semibold text-slate-600 ml-1">Modo:</span>
+                <div class="flex items-center gap-2">
+                    <button id="btn-global" onclick="app.setRegion('global')" class="text-xs px-3 py-1 rounded transition-colors font-medium bg-blue-600 text-white shadow-sm">Global/ATS</button>
+                    <button id="btn-latam" onclick="app.setRegion('latam')" class="text-xs px-3 py-1 rounded transition-colors font-medium text-slate-600 hover:bg-gray-200">Arg/Latam</button>
+                </div>
+            </div>
 
-    <div class="editor-pane" id="sidebar">
-        <div class="editor-header">
-            <h1 style="margin:0; font-size:1.1rem; color:var(--primary)">ATS Builder v6</h1>
-            <div style="display:flex; gap:5px">
-                <button class="btn btn-outline" onclick="app.loadExample()" title="Ejemplo"><i class="fas fa-magic"></i></button>
-                <button class="btn btn-danger" onclick="app.clearData()" title="Borrar"><i class="fas fa-trash"></i></button>
-                <button class="btn btn-primary" onclick="app.checkPayment()" title="Descargar"><i class="fas fa-download"></i></button>
+            <div class="flex gap-2">
+                <button onclick="app.loadExample()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-slate-700 text-xs font-bold py-2 px-3 rounded transition"><i class="fas fa-magic mr-1"></i> Ejemplo</button>
+                <button onclick="app.resetData()" class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold py-2 px-3 rounded transition"><i class="fas fa-trash-alt mr-1"></i> Reset</button>
+                <button onclick="window.print()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded shadow transition"><i class="fas fa-download mr-1"></i> PDF</button>
+            </div>
+            
+            <div id="latam-warning" class="hidden mt-3 p-2 bg-yellow-50 border border-yellow-200 text-yellow-800 text-[10px] rounded flex items-start">
+                <i class="fas fa-exclamation-triangle mt-0.5 mr-2"></i>
+                <span>Aunque uses modo LATAM, evita fotos y diseños complejos para pasar los filtros automáticos (ATS).</span>
             </div>
         </div>
-        <div class="editor-content" id="form-container"></div>
-    </div>
 
-    <div class="preview-pane">
-        <div id="resume-container">
-            <div class="watermark-overlay" id="watermark"></div>
-            <div id="resume-preview"></div>
+        <div class="flex-1 overflow-y-auto p-5 editor-scroll space-y-4">
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <button onclick="app.toggleSection('sec-personal')" class="w-full flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 transition border-b border-gray-100 text-sm font-bold text-slate-700">
+                    <span><i class="fas fa-user mr-2 text-blue-500"></i>Información Personal</span>
+                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                </button>
+                <div id="sec-personal" class="p-4 space-y-3">
+                    <input type="text" placeholder="Nombre Completo" data-model="personal.name" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                    <input type="text" placeholder="Título Profesional (ej. Senior Developer)" data-model="personal.title" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="email" placeholder="Email" data-model="personal.email" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                        <input type="text" placeholder="Teléfono" data-model="personal.phone" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" placeholder="LinkedIn URL" data-model="personal.linkedin" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                        <input type="text" placeholder="GitHub / Portfolio URL" data-model="personal.website" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                    </div>
+
+                    <div class="region-latam hidden space-y-3 pt-2 border-t border-dashed border-gray-200">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Campos Regionales</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" placeholder="Ubicación (Provincia, País)" data-model="personal.location" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                            <input type="text" placeholder="DNI (Opcional)" data-model="personal.dni" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <input type="text" placeholder="Fecha Nacimiento / Edad" data-model="personal.age" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <button onclick="app.toggleSection('sec-summary')" class="w-full flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 transition border-b border-gray-100 text-sm font-bold text-slate-700">
+                    <span><i class="fas fa-align-left mr-2 text-blue-500"></i>Perfil Profesional</span>
+                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                </button>
+                <div id="sec-summary" class="p-4 hidden">
+                    <textarea placeholder="Resumen profesional enfocado en logros..." data-model="summary" class="w-full text-sm p-2 border border-gray-300 rounded h-32 focus:border-blue-500 focus:outline-none"></textarea>
+                    <p class="text-[10px] text-gray-400 mt-1">Tip: Usa palabras clave de la oferta de trabajo.</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-slate-50 border-b border-gray-100">
+                    <button onclick="app.toggleSection('sec-experience')" class="text-sm font-bold text-slate-700 flex items-center">
+                        <i class="fas fa-briefcase mr-2 text-blue-500"></i>Experiencia
+                    </button>
+                    <button onclick="app.addExperience()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="sec-experience" class="p-4 space-y-4 hidden">
+                    <div id="experience-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-slate-50 border-b border-gray-100">
+                    <button onclick="app.toggleSection('sec-projects')" class="text-sm font-bold text-slate-700 flex items-center">
+                        <i class="fas fa-code mr-2 text-blue-500"></i>Proyectos
+                    </button>
+                    <button onclick="app.addProject()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="sec-projects" class="p-4 space-y-4 hidden">
+                    <div id="projects-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div class="flex justify-between items-center p-3 bg-slate-50 border-b border-gray-100">
+                    <button onclick="app.toggleSection('sec-education')" class="text-sm font-bold text-slate-700 flex items-center">
+                        <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>Educación
+                    </button>
+                    <button onclick="app.addEducation()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="sec-education" class="p-4 space-y-4 hidden">
+                    <div id="education-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <button onclick="app.toggleSection('sec-skills')" class="w-full flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 transition border-b border-gray-100 text-sm font-bold text-slate-700">
+                    <span><i class="fas fa-tools mr-2 text-blue-500"></i>Habilidades & Idiomas</span>
+                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                </button>
+                <div id="sec-skills" class="p-4 hidden">
+                    <label class="text-xs font-bold text-gray-500 block mb-1">Tecnologías (Hard Skills)</label>
+                    <textarea placeholder="Java, Python, React, SQL..." data-model="skills.hard" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none mb-3"></textarea>
+                    
+                    <label class="text-xs font-bold text-gray-500 block mb-1">Idiomas</label>
+                    <textarea placeholder="Español (Nativo), Inglés (C1)..." data-model="skills.languages" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></textarea>
+                </div>
+            </div>
+            
+            <div class="text-center text-[10px] text-gray-400 pt-5 pb-10">
+                ATS-CV Builder Pro &copy; 2023 - Local Storage Enabled
+            </div>
         </div>
-    </div>
+    </aside>
+
+    <main class="flex-1 bg-gray-200 flex justify-center overflow-y-auto p-4 md:p-8 relative">
+        <div id="preview-container" class="print-only a4-page text-slate-900 leading-normal">
+            </div>
+    </main>
 
     <script>
         const app = {
-            data: {
-                isPaid: false,
-                isSidebarOpen: true,
-                settings: { showPhoto: true, align: 'left' },
-                photo: null,
-                personal: { name: '', email: '', phone: '', linkedin: '', location: '', summary: '' },
-                experience: [], education: [], languages: [], skills: ''
+            state: {
+                config: {
+                    region: 'global', // 'global' or 'latam'
+                },
+                personal: {
+                    name: '',
+                    title: '',
+                    email: '',
+                    phone: '',
+                    linkedin: '',
+                    website: '',
+                    location: '',
+                    dni: '',
+                    age: ''
+                },
+                summary: '',
+                experience: [],
+                projects: [],
+                education: [],
+                skills: {
+                    hard: '',
+                    languages: ''
+                }
+            },
+
+            // Dummy Data
+            dummyData: {
+                config: { region: 'global' },
+                personal: {
+                    name: 'Alex Johnson',
+                    title: 'Senior Full Stack Developer',
+                    email: 'alex.dev@example.com',
+                    phone: '+1 555-0123',
+                    linkedin: 'linkedin.com/in/alexjohnson',
+                    website: 'github.com/alexcode',
+                    location: 'Buenos Aires, Argentina',
+                    dni: '12.345.678',
+                    age: '32 Años'
+                },
+                summary: 'Ingeniero de Software orientado a resultados con más de 8 años de experiencia diseñando y escalando aplicaciones web. Experto en arquitectura cloud y optimización de rendimiento. Historial comprobado de liderazgo técnico en entornos ágiles.',
+                experience: [
+                    {
+                        company: 'Tech Solutions Inc.',
+                        role: 'Tech Lead',
+                        start: '01/2021',
+                        end: 'Presente',
+                        description: '• Lideré la migración de un monolito legado a microservicios usando Node.js y Docker, reduciendo el tiempo de despliegue en un 40%.\n• Implementé pipelines de CI/CD en AWS.\n• Mentoring de 5 desarrolladores junior.'
+                    },
+                    {
+                        company: 'Creative Web Agency',
+                        role: 'Full Stack Developer',
+                        start: '06/2018',
+                        end: '12/2020',
+                        description: '• Desarrollé interfaces de usuario complejas con React y Redux.\n• Optimicé consultas SQL mejorando la velocidad de carga de reportes en un 60%.'
+                    }
+                ],
+                projects: [
+                    {
+                        name: 'E-Commerce Analytics Dashboard',
+                        tech: 'Vue.js, Firebase, D3.js',
+                        description: 'Plataforma en tiempo real para visualizar métricas de ventas. Atiende a +10k usuarios concurrentes.'
+                    }
+                ],
+                education: [
+                    {
+                        school: 'Universidad Tecnológica',
+                        degree: 'Ingeniería en Sistemas',
+                        year: '2014 - 2019'
+                    }
+                ],
+                skills: {
+                    hard: 'JavaScript (ES6+), TypeScript, React, Node.js, PostgreSQL, Docker, AWS, Git, TailwindCSS',
+                    languages: 'Español (Nativo), Inglés (C1 Avanzado)'
+                }
             },
 
             init() {
                 this.loadFromStorage();
-                this.renderForm();
-                this.renderPreview();
-                this.generateWatermark();
-                this.applySidebarState();
-            },
-
-            // --- Lógica del Menú Desplegable ---
-            toggleSidebar() {
-                this.data.isSidebarOpen = !this.data.isSidebarOpen;
-                this.applySidebarState();
-            },
-
-            applySidebarState() {
-                const sidebar = document.getElementById('sidebar');
-                if (this.data.isSidebarOpen) {
-                    sidebar.classList.remove('closed');
-                } else {
-                    sidebar.classList.add('closed');
-                }
-            },
-
-            // --- Lógica de Pago ---
-            checkPayment() {
-                if (this.data.isPaid) {
-                    window.print();
-                } else {
-                    document.getElementById('paymentModal').style.display = 'flex';
-                }
-            },
-
-            processPayment() {
-                document.querySelector('.pay-btn').innerText = 'Procesando...';
-                setTimeout(() => {
-                    this.data.isPaid = true;
-                    this.save();
-                    this.closeModal();
-                    document.getElementById('watermark').style.display = 'none';
-                    alert("¡Gracias! Descargando...");
-                    window.print();
-                    document.querySelector('.pay-btn').innerText = 'Pagar ahora';
-                }, 1000);
-            },
-
-            closeModal() { document.getElementById('paymentModal').style.display = 'none'; },
-
-            generateWatermark() {
-                const wm = document.getElementById('watermark');
-                if(this.data.isPaid) { wm.style.display = 'none'; return; }
-                let html = '';
-                for(let i=0; i<15; i++) html += `<div class="watermark-text">VISTA PREVIA • SIN PAGAR</div>`;
-                wm.innerHTML = html;
-            },
-
-            // --- Core App ---
-            save() {
-                localStorage.setItem('atsDataV6', JSON.stringify(this.data));
-                this.renderPreview();
+                this.bindEvents();
+                this.renderAll();
             },
 
             loadFromStorage() {
-                const stored = localStorage.getItem('atsDataV6');
+                const stored = localStorage.getItem('ats-cv-state');
                 if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if(!parsed.settings.align) parsed.settings.align = 'left'; 
-                    this.data = parsed;
+                    this.state = JSON.parse(stored);
                 }
+                // Apply region UI state
+                this.setRegion(this.state.config.region || 'global', false);
             },
 
-            clearData() {
-                if(confirm("¿Reiniciar todo?")) {
-                    localStorage.removeItem('atsDataV6');
-                    this.data = {
-                        isPaid: false, isSidebarOpen: true,
-                        settings: { showPhoto: true, align: 'left' }, photo: null,
-                        personal: { name: '', email: '', phone: '', linkedin: '', location: '', summary: '' },
-                        experience: [], education: [], languages: [], skills: ''
-                    };
-                    this.renderForm();
-                    this.renderPreview();
-                    this.generateWatermark();
-                    document.getElementById('watermark').style.display = 'flex';
-                }
+            save() {
+                localStorage.setItem('ats-cv-state', JSON.stringify(this.state));
+                this.renderPreview();
             },
 
-            handleImageUpload(e) {
-                const f = e.target.files[0];
-                if(f) {
-                    const r = new FileReader();
-                    r.onload = (ev) => { this.data.photo = ev.target.result; this.save(); };
-                    r.readAsDataURL(f);
-                }
-            },
-
-            togglePhoto() { this.data.settings.showPhoto = !this.data.settings.showPhoto; this.save(); },
-            setAlign(a) { this.data.settings.align = a; this.save(); this.renderForm(); },
-
-            loadExample() {
-                this.data = {
-                    isPaid: false, isSidebarOpen: true,
-                    settings: { showPhoto: true, align: 'left' }, photo: null,
-                    personal: { name: "Sofía Martínez", email: "sofia@mail.com", phone: "+12345678", linkedin: "in/sofia", location: "CABA, AR", summary: "Desarrolladora Full Stack." },
-                    experience: [{ role: "Dev", company: "Tech", dates: "2022-Pres", description: "• React & Node." }],
-                    education: [{ degree: "Ingeniería", school: "UBA", year: "2023" }],
-                    languages: [{ language: "Inglés", level: "C1" }],
-                    skills: "JS, Python, AWS"
-                };
-                this.save();
-                this.renderForm();
-                this.generateWatermark();
-                document.getElementById('watermark').style.display = 'flex';
-            },
-
-            updateField(s, f, v, i = null) {
-                if(i !== null) this.data[s][i][f] = v;
-                else if(typeof this.data[s] === 'object' && !Array.isArray(this.data[s])) this.data[s][f] = v;
-                else this.data[s] = v;
-                this.save();
-            },
-            
-            addItem(s) {
-                const item = s==='experience' ? {role:'',company:'',dates:'',description:''} : s==='education' ? {degree:'',school:'',year:''} : {language:'',level:''};
-                this.data[s].push(item); this.save(); this.renderForm();
-            },
-            removeItem(s, i) { this.data[s].splice(i, 1); this.save(); this.renderForm(); },
-
-            renderForm() {
-                const s = this.data.settings;
-                const c = document.getElementById('form-container');
-                let html = `
-                    <div class="section-card">
-                        <div class="section-title">Alineación y Foto</div>
-                        <div class="align-group">
-                            <button class="align-btn ${s.align==='left'?'active':''}" onclick="app.setAlign('left')"><i class="fas fa-align-left"></i></button>
-                            <button class="align-btn ${s.align==='center'?'active':''}" onclick="app.setAlign('center')"><i class="fas fa-align-center"></i></button>
-                            <button class="align-btn ${s.align==='right'?'active':''}" onclick="app.setAlign('right')"><i class="fas fa-align-right"></i></button>
-                        </div><br>
-                        <div class="toggle-container"><label class="switch"><input type="checkbox" ${s.showPhoto?'checked':''} onchange="app.togglePhoto()"><span class="slider"></span></label><span>Foto</span></div>
-                        <input type="file" accept="image/*" onchange="app.handleImageUpload(event)" class="form-control">
-                    </div>
-                    <div class="section-card"><div class="section-title">Datos</div>
-                        <input class="form-control" placeholder="Nombre" value="${this.data.personal.name}" oninput="app.updateField('personal','name',this.value)">
-                        <input class="form-control" placeholder="Ubicación" value="${this.data.personal.location}" oninput="app.updateField('personal','location',this.value)">
-                        <input class="form-control" placeholder="Email" value="${this.data.personal.email}" oninput="app.updateField('personal','email',this.value)">
-                        <input class="form-control" placeholder="Teléfono" value="${this.data.personal.phone}" oninput="app.updateField('personal','phone',this.value)">
-                        <input class="form-control" placeholder="LinkedIn" value="${this.data.personal.linkedin}" oninput="app.updateField('personal','linkedin',this.value)">
-                        <textarea class="form-control" placeholder="Resumen" oninput="app.updateField('personal','summary',this.value)">${this.data.personal.summary}</textarea>
-                    </div>`;
-
-                // Loops simplificados para legibilidad
-                const sections = [
-                    {key:'experience', title:'Experiencia', fields:[{k:'role',p:'Puesto'},{k:'company',p:'Empresa'},{k:'dates',p:'Fechas'},{k:'description',p:'Descripción', tag:'textarea'}]},
-                    {key:'education', title:'Educación', fields:[{k:'degree',p:'Título'},{k:'school',p:'Institución'},{k:'year',p:'Año'}]},
-                    {key:'languages', title:'Idiomas', fields:[{k:'language',p:'Idioma'},{k:'level',p:'Nivel'}]}
-                ];
-
-                sections.forEach(sec => {
-                    html += `<div class="section-card"><div class="section-title">${sec.title} <button class="btn btn-primary" style="width:auto; padding:2px 8px" onclick="app.addItem('${sec.key}')">+</button></div>`;
-                    this.data[sec.key].forEach((item, idx) => {
-                        html += `<div class="item-card"><i class="fas fa-times delete-btn" onclick="app.removeItem('${sec.key}',${idx})"></i>`;
-                        sec.fields.forEach(f => {
-                            if(f.tag === 'textarea') html += `<textarea class="form-control" placeholder="${f.p}" oninput="app.updateField('${sec.key}','${f.k}',this.value,${idx})">${item[f.k]}</textarea>`;
-                            else html += `<input class="form-control" placeholder="${f.p}" value="${item[f.k]}" oninput="app.updateField('${sec.key}','${f.k}',this.value,${idx})">`;
-                        });
-                        html += `</div>`;
+            bindEvents() {
+                // Generic Input binding for simple fields
+                document.querySelectorAll('input[data-model], textarea[data-model]').forEach(input => {
+                    const path = input.dataset.model.split('.');
+                    input.value = path.length === 2 ? this.state[path[0]][path[1]] : this.state[path[0]];
+                    
+                    input.addEventListener('input', (e) => {
+                        if (path.length === 2) {
+                            this.state[path[0]][path[1]] = e.target.value;
+                        } else {
+                            this.state[path[0]] = e.target.value;
+                        }
+                        this.save();
                     });
-                    html += `</div>`;
                 });
-
-                html += `<div class="section-card"><div class="section-title">Skills</div><textarea class="form-control" oninput="app.updateField('skills',null,this.value)">${this.data.skills}</textarea></div>`;
-                c.innerHTML = html;
             },
+
+            setRegion(region, updateState = true) {
+                if(updateState) {
+                    this.state.config.region = region;
+                    this.save();
+                }
+
+                // Update UI Buttons
+                const btnGlobal = document.getElementById('btn-global');
+                const btnLatam = document.getElementById('btn-latam');
+                const latamFields = document.querySelectorAll('.region-latam');
+                const latamWarning = document.getElementById('latam-warning');
+
+                if (region === 'global') {
+                    btnGlobal.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+                    btnGlobal.classList.remove('text-slate-600', 'hover:bg-gray-200');
+                    btnLatam.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                    btnLatam.classList.add('text-slate-600', 'hover:bg-gray-200');
+                    latamFields.forEach(el => el.classList.add('hidden'));
+                    latamWarning.classList.add('hidden');
+                } else {
+                    btnLatam.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+                    btnLatam.classList.remove('text-slate-600', 'hover:bg-gray-200');
+                    btnGlobal.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                    btnGlobal.classList.add('text-slate-600', 'hover:bg-gray-200');
+                    latamFields.forEach(el => el.classList.remove('hidden'));
+                    latamWarning.classList.remove('hidden');
+                }
+                this.renderPreview();
+            },
+
+            toggleSection(id) {
+                const el = document.getElementById(id);
+                el.classList.toggle('hidden');
+                // Simple accordion logic: scroll to view if needed
+            },
+
+            // --- LIST MANAGEMENT ---
+
+            renderListInputs(containerId, dataArray, templateFn) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                dataArray.forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-50 p-3 rounded border border-gray-200 relative group';
+                    div.innerHTML = templateFn(item, index);
+                    container.appendChild(div);
+
+                    // Bind inputs in this dynamic item
+                    div.querySelectorAll('input, textarea').forEach(input => {
+                        input.addEventListener('input', (e) => {
+                            const field = e.target.dataset.field;
+                            this.state[containerId.replace('-list', '')][index][field] = e.target.value;
+                            this.save();
+                        });
+                    });
+                });
+            },
+
+            addExperience() {
+                this.state.experience.unshift({ company: '', role: '', start: '', end: '', description: '' });
+                this.save();
+                this.renderExperienceInputs();
+                this.toggleSection('sec-experience'); // ensure visible
+                const sec = document.getElementById('sec-experience');
+                if(sec.classList.contains('hidden')) sec.classList.remove('hidden');
+            },
+
+            removeExperience(index) {
+                this.state.experience.splice(index, 1);
+                this.save();
+                this.renderExperienceInputs();
+            },
+
+            renderExperienceInputs() {
+                this.renderListInputs('experience-list', this.state.experience, (item, index) => `
+                    <button onclick="app.removeExperience(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                    <div class="grid grid-cols-2 gap-2 mb-2 pr-6">
+                        <input type="text" data-field="role" value="${item.role}" placeholder="Cargo" class="w-full text-xs p-2 border rounded">
+                        <input type="text" data-field="company" value="${item.company}" placeholder="Empresa" class="w-full text-xs p-2 border rounded">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <input type="text" data-field="start" value="${item.start}" placeholder="Inicio (MM/YYYY)" class="w-full text-xs p-2 border rounded">
+                        <input type="text" data-field="end" value="${item.end}" placeholder="Fin" class="w-full text-xs p-2 border rounded">
+                    </div>
+                    <textarea data-field="description" placeholder="Descripción con bullets (• Logro...)" class="w-full text-xs p-2 border rounded h-20">${item.description}</textarea>
+                `);
+            },
+
+            addProject() {
+                this.state.projects.unshift({ name: '', tech: '', description: '' });
+                this.save();
+                this.renderProjectInputs();
+                const sec = document.getElementById('sec-projects');
+                if(sec.classList.contains('hidden')) sec.classList.remove('hidden');
+            },
+
+            removeProject(index) {
+                this.state.projects.splice(index, 1);
+                this.save();
+                this.renderProjectInputs();
+            },
+
+            renderProjectInputs() {
+                this.renderListInputs('projects-list', this.state.projects, (item, index) => `
+                    <button onclick="app.removeProject(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                    <div class="mb-2 pr-6">
+                        <input type="text" data-field="name" value="${item.name}" placeholder="Nombre del Proyecto" class="w-full text-xs p-2 border rounded font-bold">
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" data-field="tech" value="${item.tech}" placeholder="Tecnologías (React, AWS...)" class="w-full text-xs p-2 border rounded">
+                    </div>
+                    <textarea data-field="description" placeholder="Descripción breve" class="w-full text-xs p-2 border rounded h-16">${item.description}</textarea>
+                `);
+            },
+
+            addEducation() {
+                this.state.education.unshift({ school: '', degree: '', year: '' });
+                this.save();
+                this.renderEducationInputs();
+                const sec = document.getElementById('sec-education');
+                if(sec.classList.contains('hidden')) sec.classList.remove('hidden');
+            },
+
+            removeEducation(index) {
+                this.state.education.splice(index, 1);
+                this.save();
+                this.renderEducationInputs();
+            },
+
+            renderEducationInputs() {
+                this.renderListInputs('education-list', this.state.education, (item, index) => `
+                    <button onclick="app.removeEducation(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+                    <div class="mb-2 pr-6">
+                        <input type="text" data-field="school" value="${item.school}" placeholder="Institución" class="w-full text-xs p-2 border rounded font-bold">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" data-field="degree" value="${item.degree}" placeholder="Título" class="w-full text-xs p-2 border rounded">
+                        <input type="text" data-field="year" value="${item.year}" placeholder="Año / Periodo" class="w-full text-xs p-2 border rounded">
+                    </div>
+                `);
+            },
+
+            // --- RENDER PREVIEW (CORE) ---
 
             renderPreview() {
-                const p = this.data.personal;
-                const s = this.data.settings;
-                const ul = (t) => t ? `<ul class="cv-list">${t.split('\n').filter(x=>x.trim()).map(x=>`<li>${x.replace(/^[•-]\s*/,'')}</li>`).join('')}</ul>` : '';
+                const p = this.state.personal;
+                const isLatam = this.state.config.region === 'latam';
                 
-                let align = s.align==='center' ? 'header-center' : s.align==='right' ? 'header-right' : 'header-left';
-                let html = `<div class="cv-header-container ${align}">
-                    <div class="cv-photo-box ${s.showPhoto && this.data.photo ? 'visible' : ''}"><img src="${this.data.photo||''}"></div>
-                    <div class="cv-header-text"><div class="cv-name">${p.name||'NOMBRE'}</div><div class="cv-contact">${p.location?p.location+'<br>':''}${p.email?p.email+' | ':''}${p.phone||''}<br>${p.linkedin||''}</div></div>
-                </div>`;
+                // Construct Contact Line
+                let contactParts = [];
+                if (p.email) contactParts.push(p.email);
+                if (p.phone) contactParts.push(p.phone);
+                if (isLatam && p.location) contactParts.push(p.location);
+                if (p.linkedin) contactParts.push(p.linkedin.replace(/^https?:\/\//, ''));
+                if (p.website) contactParts.push(p.website.replace(/^https?:\/\//, ''));
                 
-                if(p.summary) html += `<div class="cv-section-title">Perfil</div><div class="cv-summary">${p.summary}</div>`;
-                
-                if(this.data.experience.length) {
-                    html += `<div class="cv-section-title">Experiencia</div>` + this.data.experience.map(e => 
-                        `<div class="cv-item"><div class="cv-item-header"><div><span class="cv-role">${e.role}</span>${e.company?' en <span class="cv-company">'+e.company+'</span>':''}</div><div class="cv-dates">${e.dates}</div></div>${ul(e.description)}</div>`
-                    ).join('');
+                let latamExtra = '';
+                if (isLatam) {
+                    let parts = [];
+                    if (p.dni) parts.push(`DNI: ${p.dni}`);
+                    if (p.age) parts.push(p.age);
+                    if (parts.length > 0) latamExtra = `<div class="ats-text mt-1 text-slate-600">${parts.join(' | ')}</div>`;
                 }
-                if(this.data.education.length) {
-                    html += `<div class="cv-section-title">Educación</div>` + this.data.education.map(e => 
-                        `<div class="cv-item"><div class="cv-item-header"><div class="cv-role">${e.degree}</div><div class="cv-dates">${e.year}</div></div><div>${e.school}</div></div>`
-                    ).join('');
-                }
-                if(this.data.languages.length) {
-                    html += `<div class="cv-section-title">Idiomas</div><ul class="cv-lang-list">` + this.data.languages.map(l => 
-                        `<li class="cv-lang-item"><span class="cv-lang-name">${l.language}:</span> ${l.level}</li>`
-                    ).join('') + `</ul>`;
-                }
-                if(this.data.skills) html += `<div class="cv-section-title">Skills</div><div class="cv-summary">${this.data.skills}</div>`;
 
-                document.getElementById('resume-preview').innerHTML = html;
+                // Skills formatting
+                let skillsHTML = '';
+                if (this.state.skills.hard || this.state.skills.languages) {
+                    skillsHTML = `<div class="ats-section-title">Habilidades Técnicas & Idiomas</div><div class="ats-text">`;
+                    if (this.state.skills.hard) skillsHTML += `<div><span class="ats-bold">Tecnologías:</span> ${this.state.skills.hard}</div>`;
+                    if (this.state.skills.languages) skillsHTML += `<div class="mt-1"><span class="ats-bold">Idiomas:</span> ${this.state.skills.languages}</div>`;
+                    skillsHTML += `</div>`;
+                }
+
+                // Experience HTML
+                let expHTML = '';
+                if (this.state.experience.length > 0) {
+                    expHTML = `<div class="ats-section-title">Experiencia Profesional</div>`;
+                    this.state.experience.forEach(item => {
+                        // Handle newlines as breaks for simple formatting, but ATS prefers lists
+                        const descFormatted = item.description.split('\n').map(line => {
+                             if(line.trim().startsWith('•') || line.trim().startsWith('-')) {
+                                 return `<div class="pl-3">${line}</div>`;
+                             }
+                             return `<div>${line}</div>`;
+                        }).join('');
+
+                        expHTML += `
+                        <div class="mb-4 break-inside-avoid">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <div class="ats-role text-slate-900">${item.role}</div>
+                                <div class="ats-text text-right font-medium text-slate-700 whitespace-nowrap">${item.start} - ${item.end}</div>
+                            </div>
+                            <div class="ats-text font-bold text-slate-700 mb-1 italic">${item.company}</div>
+                            <div class="ats-text text-slate-800 text-justify">${descFormatted}</div>
+                        </div>`;
+                    });
+                }
+
+                // Projects HTML
+                let projHTML = '';
+                if (this.state.projects.length > 0) {
+                    projHTML = `<div class="ats-section-title">Proyectos Destacados</div>`;
+                    this.state.projects.forEach(item => {
+                        projHTML += `
+                        <div class="mb-3 break-inside-avoid">
+                            <div class="flex justify-between items-baseline">
+                                <span class="ats-text font-bold">${item.name}</span>
+                                <span class="ats-text text-sm italic text-slate-600">${item.tech}</span>
+                            </div>
+                            <div class="ats-text">${item.description}</div>
+                        </div>`;
+                    });
+                }
+
+                // Education HTML
+                let eduHTML = '';
+                if (this.state.education.length > 0) {
+                    eduHTML = `<div class="ats-section-title">Educación</div>`;
+                    this.state.education.forEach(item => {
+                        eduHTML += `
+                        <div class="mb-2 break-inside-avoid flex justify-between">
+                            <div>
+                                <div class="ats-text font-bold">${item.school}</div>
+                                <div class="ats-text">${item.degree}</div>
+                            </div>
+                            <div class="ats-text text-right whitespace-nowrap">${item.year}</div>
+                        </div>`;
+                    });
+                }
+
+                // HTML Assembly
+                const html = `
+                    <div class="border-b-2 border-slate-800 pb-4 mb-4">
+                        <div class="ats-name tracking-wide text-slate-900">${p.name}</div>
+                        <div class="ats-role text-blue-700">${p.title}</div>
+                        <div class="ats-contact text-slate-700 mt-2">
+                            ${contactParts.join(' | ')}
+                        </div>
+                        ${latamExtra}
+                    </div>
+
+                    ${this.state.summary ? `
+                        <div class="ats-section-title">Perfil Profesional</div>
+                        <div class="ats-text text-justify mb-4">${this.state.summary}</div>
+                    ` : ''}
+
+                    ${expHTML}
+                    ${projHTML}
+                    ${eduHTML}
+                    ${skillsHTML}
+                `;
+
+                document.getElementById('preview-container').innerHTML = html;
+            },
+
+            renderAll() {
+                // Populate inputs
+                document.querySelectorAll('input[data-model], textarea[data-model]').forEach(input => {
+                    const path = input.dataset.model.split('.');
+                    input.value = path.length === 2 ? this.state[path[0]][path[1]] : this.state[path[0]];
+                });
+
+                this.renderExperienceInputs();
+                this.renderProjectInputs();
+                this.renderEducationInputs();
+                this.renderPreview();
+                
+                // Show lists if data exists
+                if(this.state.experience.length > 0) document.getElementById('sec-experience').classList.remove('hidden');
+                if(this.state.education.length > 0) document.getElementById('sec-education').classList.remove('hidden');
+            },
+
+            loadExample() {
+                if(confirm('¿Cargar datos de ejemplo? Esto borrará tus datos actuales.')) {
+                    this.state = JSON.parse(JSON.stringify(this.dummyData));
+                    this.state.config.region = 'global'; // reset to default view
+                    this.save();
+                    this.setRegion('global', false);
+                    this.renderAll();
+                }
+            },
+
+            resetData() {
+                if(confirm('¿Estás seguro de borrar TODO?')) {
+                    localStorage.removeItem('ats-cv-state');
+                    location.reload();
+                }
             }
         };
-        app.init();
+
+        // Init App
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
     </script>
 </body>
 </html>
