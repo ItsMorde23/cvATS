@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS-CV Builder Pro (Compact)</title>
+    <title>ATS-CV Builder Pro (Full Español)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -18,7 +18,7 @@
             background: white;
             margin: 0 auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            padding: 15mm 20mm; /* Márgenes un poco más ajustados */
+            padding: 15mm 20mm;
             box-sizing: border-box;
             color: #000;
         }
@@ -30,7 +30,7 @@
 
         /* --- ESTILOS ATS COMPACTOS --- */
         .ats-name {
-            font-size: 22pt; /* Un pelín más chico para que no grite tanto */
+            font-size: 22pt;
             font-weight: 700;
             text-transform: uppercase;
             line-height: 1;
@@ -40,7 +40,7 @@
             font-size: 12pt;
             font-weight: 500;
             margin-bottom: 8px;
-            color: #1d4ed8; /* Azul Tailwind */
+            color: #1d4ed8;
         }
         .ats-contact {
             font-size: 9.5pt;
@@ -48,26 +48,26 @@
             line-height: 1.3;
         }
         
-        /* TÍTULOS DE SECCIÓN: MENOS ESPACIO */
+        /* TÍTULOS DE SECCIÓN COMPACTOS */
         .ats-section-title {
             font-size: 11pt;
             font-weight: 700;
             text-transform: uppercase;
             border-bottom: 1px solid #000;
-            margin-top: 12px; /* Antes 15px */
-            margin-bottom: 6px; /* Antes 10px */
+            margin-top: 12px;
+            margin-bottom: 6px;
             padding-bottom: 1px;
             letter-spacing: 0.5px;
         }
 
         .ats-text { font-size: 10pt; line-height: 1.35; }
         
-        /* EXPERIENCIA: CERO ESPACIO AL PEDO */
+        /* EXPERIENCIA PEGADA */
         .ats-job-row {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 0px; /* Pegado a la empresa */
+            margin-bottom: 0px;
         }
         .ats-role { font-size: 10.5pt; font-weight: 700; color: #111; }
         .ats-company { font-size: 10pt; font-weight: 600; font-style: italic; color: #333; margin-bottom: 2px; }
@@ -86,7 +86,7 @@
 
     <aside class="w-full md:w-5/12 lg:w-4/12 flex flex-col border-r border-gray-300 bg-gray-100 no-print z-10 shadow-lg">
         <div class="p-4 bg-white border-b border-gray-200 shadow-sm z-20">
-            <h1 class="text-lg font-bold text-slate-800"><i class="fas fa-print text-blue-600 mr-2"></i>ATS-CV Builder <span class="text-xs bg-blue-100 text-blue-700 px-1 rounded">Compact</span></h1>
+            <h1 class="text-lg font-bold text-slate-800"><i class="fas fa-print text-blue-600 mr-2"></i>ATS-CV Builder <span class="text-xs bg-blue-100 text-blue-700 px-1 rounded">Español</span></h1>
             
             <div class="flex items-center justify-between bg-slate-100 p-1.5 rounded-lg border border-slate-200 my-3">
                 <span class="text-xs font-semibold text-slate-600 ml-1">Región:</span>
@@ -173,7 +173,7 @@
                     <span>Habilidades</span><i class="fas fa-chevron-down"></i>
                 </button>
                 <div id="sec-skills" class="p-3 hidden">
-                    <label class="text-[10px] font-bold text-gray-500 block mb-1">Hard Skills</label>
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1">Tecnologías (Hard Skills)</label>
                     <textarea data-model="skills.hard" class="w-full text-xs p-2 border rounded mb-2 h-16"></textarea>
                     <label class="text-[10px] font-bold text-gray-500 block mb-1">Idiomas</label>
                     <textarea data-model="skills.languages" class="w-full text-xs p-2 border rounded h-10"></textarea>
@@ -217,7 +217,7 @@
             },
 
             init() {
-                const stored = localStorage.getItem('ats-cv-compact');
+                const stored = localStorage.getItem('ats-cv-compact-v2');
                 if (stored) this.state = JSON.parse(stored);
                 this.bindEvents();
                 this.setRegion(this.state.config.region || 'global', false);
@@ -225,7 +225,7 @@
             },
 
             save() {
-                localStorage.setItem('ats-cv-compact', JSON.stringify(this.state));
+                localStorage.setItem('ats-cv-compact-v2', JSON.stringify(this.state));
                 this.renderPreview();
             },
 
@@ -347,8 +347,8 @@
                 }
 
                 if(this.state.skills.hard || this.state.skills.languages) {
-                    html += `<div class="ats-section-title">Skills</div><div class="ats-text">`;
-                    if(this.state.skills.hard) html += `<div><b>Tech:</b> ${this.state.skills.hard}</div>`;
+                    html += `<div class="ats-section-title">Habilidades</div><div class="ats-text">`;
+                    if(this.state.skills.hard) html += `<div><b>Tecnologías:</b> ${this.state.skills.hard}</div>`;
                     if(this.state.skills.languages) html += `<div><b>Idiomas:</b> ${this.state.skills.languages}</div>`;
                     html += `</div>`;
                 }
@@ -366,7 +366,7 @@
             },
 
             loadExample() { if(confirm('¿Cargar ejemplo?')) { this.state=JSON.parse(JSON.stringify(this.dummyData)); this.setRegion('global'); this.renderAll(); } },
-            resetData() { if(confirm('¿Borrar todo?')) { localStorage.removeItem('ats-cv-compact'); location.reload(); } }
+            resetData() { if(confirm('¿Borrar todo?')) { localStorage.removeItem('ats-cv-compact-v2'); location.reload(); } }
         };
 
         document.addEventListener('DOMContentLoaded', () => app.init());
