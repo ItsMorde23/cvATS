@@ -3,648 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS-CV Builder Pro</title>
+    <title>ATS-CV Builder Pro (Compact)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
-        body {
-            font-family: 'Roboto', sans-serif;
-        }
+        body { font-family: 'Roboto', sans-serif; }
 
-        /* A4 Paper Dimensions */
         .a4-page {
             width: 210mm;
             min-height: 297mm;
             background: white;
             margin: 0 auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            padding: 20mm; /* Standard margin */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 15mm 20mm; /* Márgenes un poco más ajustados */
             box-sizing: border-box;
             color: #000;
         }
 
-        /* Editor Scrollbar styling */
-        .editor-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
-        .editor-scroll::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        .editor-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .editor-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        /* Scrollbar del editor */
+        .editor-scroll::-webkit-scrollbar { width: 8px; }
+        .editor-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .editor-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-        /* ATS Specific Styles for Preview */
+        /* --- ESTILOS ATS COMPACTOS --- */
         .ats-name {
-            font-size: 24pt;
+            font-size: 22pt; /* Un pelín más chico para que no grite tanto */
             font-weight: 700;
             text-transform: uppercase;
-            line-height: 1.2;
+            line-height: 1;
+            margin-bottom: 4px;
         }
-        .ats-role {
-            font-size: 14pt;
+        .ats-role-header {
+            font-size: 12pt;
             font-weight: 500;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            color: #1d4ed8; /* Azul Tailwind */
         }
         .ats-contact {
-            font-size: 10pt;
-            margin-bottom: 20px;
+            font-size: 9.5pt;
+            margin-bottom: 12px;
+            line-height: 1.3;
         }
+        
+        /* TÍTULOS DE SECCIÓN: MENOS ESPACIO */
         .ats-section-title {
-            font-size: 12pt;
+            font-size: 11pt;
             font-weight: 700;
             text-transform: uppercase;
             border-bottom: 1px solid #000;
-            margin-top: 15px;
-            margin-bottom: 10px;
-            padding-bottom: 2px;
-        }
-        .ats-text {
-            font-size: 10.5pt;
-            line-height: 1.4;
-        }
-        .ats-bold {
-            font-weight: 700;
+            margin-top: 12px; /* Antes 15px */
+            margin-bottom: 6px; /* Antes 10px */
+            padding-bottom: 1px;
+            letter-spacing: 0.5px;
         }
 
-        /* Print Media Query - PIXEL PERFECT */
+        .ats-text { font-size: 10pt; line-height: 1.35; }
+        
+        /* EXPERIENCIA: CERO ESPACIO AL PEDO */
+        .ats-job-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0px; /* Pegado a la empresa */
+        }
+        .ats-role { font-size: 10.5pt; font-weight: 700; color: #111; }
+        .ats-company { font-size: 10pt; font-weight: 600; font-style: italic; color: #333; margin-bottom: 2px; }
+        .ats-date { font-size: 9.5pt; text-align: right; min-width: 120px; }
+
         @media print {
-            @page {
-                margin: 0;
-                size: A4;
-            }
-            body {
-                background: white;
-                height: 100%;
-                overflow: visible;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .print-only {
-                display: block !important;
-                width: 100%;
-                height: 100%;
-                box-shadow: none;
-                margin: 0;
-                padding: 20mm; /* Force margins on print */
-            }
-            /* Reset Tailwind defaults that might interfere */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
+            @page { margin: 0; size: A4; }
+            body { background: white; height: 100%; overflow: visible; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; width: 100%; height: 100%; box-shadow: none; margin: 0; padding: 15mm 20mm; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
 <body class="h-screen flex flex-col md:flex-row overflow-hidden bg-gray-50 text-slate-800">
 
     <aside class="w-full md:w-5/12 lg:w-4/12 flex flex-col border-r border-gray-300 bg-gray-100 no-print z-10 shadow-lg">
-        
-        <div class="p-5 bg-white border-b border-gray-200 shadow-sm z-20">
-            <h1 class="text-xl font-bold text-slate-800 mb-1"><i class="fas fa-file-contract text-blue-600 mr-2"></i>ATS-CV Builder Pro</h1>
-            <p class="text-xs text-gray-500 mb-4">Optimizado para Sistemas de Rastreo de Candidatos</p>
+        <div class="p-4 bg-white border-b border-gray-200 shadow-sm z-20">
+            <h1 class="text-lg font-bold text-slate-800"><i class="fas fa-print text-blue-600 mr-2"></i>ATS-CV Builder <span class="text-xs bg-blue-100 text-blue-700 px-1 rounded">Compact</span></h1>
             
-            <div class="flex items-center justify-between bg-slate-100 p-2 rounded-lg border border-slate-200 mb-4">
-                <span class="text-xs font-semibold text-slate-600 ml-1">Modo:</span>
-                <div class="flex items-center gap-2">
-                    <button id="btn-global" onclick="app.setRegion('global')" class="text-xs px-3 py-1 rounded transition-colors font-medium bg-blue-600 text-white shadow-sm">Global/ATS</button>
-                    <button id="btn-latam" onclick="app.setRegion('latam')" class="text-xs px-3 py-1 rounded transition-colors font-medium text-slate-600 hover:bg-gray-200">Arg/Latam</button>
+            <div class="flex items-center justify-between bg-slate-100 p-1.5 rounded-lg border border-slate-200 my-3">
+                <span class="text-xs font-semibold text-slate-600 ml-1">Región:</span>
+                <div class="flex items-center gap-1">
+                    <button id="btn-global" onclick="app.setRegion('global')" class="text-xs px-2 py-1 rounded font-medium bg-blue-600 text-white">Global</button>
+                    <button id="btn-latam" onclick="app.setRegion('latam')" class="text-xs px-2 py-1 rounded font-medium text-slate-600 hover:bg-gray-200">Latam</button>
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <button onclick="app.loadExample()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-slate-700 text-xs font-bold py-2 px-3 rounded transition"><i class="fas fa-magic mr-1"></i> Ejemplo</button>
-                <button onclick="app.resetData()" class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold py-2 px-3 rounded transition"><i class="fas fa-trash-alt mr-1"></i> Reset</button>
-                <button onclick="window.print()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded shadow transition"><i class="fas fa-download mr-1"></i> PDF</button>
-            </div>
-            
-            <div id="latam-warning" class="hidden mt-3 p-2 bg-yellow-50 border border-yellow-200 text-yellow-800 text-[10px] rounded flex items-start">
-                <i class="fas fa-exclamation-triangle mt-0.5 mr-2"></i>
-                <span>Aunque uses modo LATAM, evita fotos y diseños complejos para pasar los filtros automáticos (ATS).</span>
+                <button onclick="app.loadExample()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-slate-700 text-xs font-bold py-2 rounded"><i class="fas fa-magic"></i> Ejemplo</button>
+                <button onclick="app.resetData()" class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold py-2 rounded"><i class="fas fa-trash"></i> Reset</button>
+                <button onclick="window.print()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded shadow"><i class="fas fa-download"></i> PDF</button>
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-5 editor-scroll space-y-4">
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <button onclick="app.toggleSection('sec-personal')" class="w-full flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 transition border-b border-gray-100 text-sm font-bold text-slate-700">
-                    <span><i class="fas fa-user mr-2 text-blue-500"></i>Información Personal</span>
-                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+        <div class="flex-1 overflow-y-auto p-4 editor-scroll space-y-3">
+            <div class="bg-white rounded border border-gray-200 overflow-hidden">
+                <button onclick="app.toggleSection('sec-personal')" class="w-full flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100 border-b border-gray-100 text-xs font-bold text-slate-700 uppercase">
+                    <span>Información Personal</span><i class="fas fa-chevron-down"></i>
                 </button>
-                <div id="sec-personal" class="p-4 space-y-3">
-                    <input type="text" placeholder="Nombre Completo" data-model="personal.name" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
-                    <input type="text" placeholder="Título Profesional (ej. Senior Developer)" data-model="personal.title" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="email" placeholder="Email" data-model="personal.email" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
-                        <input type="text" placeholder="Teléfono" data-model="personal.phone" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                <div id="sec-personal" class="p-3 space-y-2">
+                    <input type="text" placeholder="Nombre Completo" data-model="personal.name" class="w-full text-xs p-2 border rounded">
+                    <input type="text" placeholder="Título (ej. Developer)" data-model="personal.title" class="w-full text-xs p-2 border rounded">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="email" placeholder="Email" data-model="personal.email" class="w-full text-xs p-2 border rounded">
+                        <input type="text" placeholder="Teléfono" data-model="personal.phone" class="w-full text-xs p-2 border rounded">
                     </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" placeholder="LinkedIn URL" data-model="personal.linkedin" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
-                        <input type="text" placeholder="GitHub / Portfolio URL" data-model="personal.website" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" placeholder="LinkedIn" data-model="personal.linkedin" class="w-full text-xs p-2 border rounded">
+                        <input type="text" placeholder="Web/Portfolio" data-model="personal.website" class="w-full text-xs p-2 border rounded">
                     </div>
-
-                    <div class="region-latam hidden space-y-3 pt-2 border-t border-dashed border-gray-200">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Campos Regionales</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <input type="text" placeholder="Ubicación (Provincia, País)" data-model="personal.location" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
-                            <input type="text" placeholder="DNI (Opcional)" data-model="personal.dni" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                    <div class="region-latam hidden space-y-2 pt-2 border-t border-dashed border-gray-200">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" placeholder="Ubicación" data-model="personal.location" class="w-full text-xs p-2 border rounded">
+                            <input type="text" placeholder="DNI" data-model="personal.dni" class="w-full text-xs p-2 border rounded">
                         </div>
-                        <input type="text" placeholder="Fecha Nacimiento / Edad" data-model="personal.age" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+                        <input type="text" placeholder="Edad / Nacimiento" data-model="personal.age" class="w-full text-xs p-2 border rounded">
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <button onclick="app.toggleSection('sec-summary')" class="w-full flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 transition border-b border-gray-100 text-sm font-bold text-slate-700">
-                    <span><i class="fas fa-align-left mr-2 text-blue-500"></i>Perfil Profesional</span>
-                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+            <div class="bg-white rounded border border-gray-200 overflow-hidden">
+                <button onclick="app.toggleSection('sec-summary')" class="w-full flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100 border-b border-gray-100 text-xs font-bold text-slate-700 uppercase">
+                    <span>Perfil Profesional</span><i class="fas fa-chevron-down"></i>
                 </button>
-                <div id="sec-summary" class="p-4 hidden">
-                    <textarea placeholder="Resumen profesional enfocado en logros..." data-model="summary" class="w-full text-sm p-2 border border-gray-300 rounded h-32 focus:border-blue-500 focus:outline-none"></textarea>
-                    <p class="text-[10px] text-gray-400 mt-1">Tip: Usa palabras clave de la oferta de trabajo.</p>
+                <div id="sec-summary" class="p-3 hidden">
+                    <textarea placeholder="Resumen..." data-model="summary" class="w-full text-xs p-2 border rounded h-24"></textarea>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div class="flex justify-between items-center p-3 bg-slate-50 border-b border-gray-100">
-                    <button onclick="app.toggleSection('sec-experience')" class="text-sm font-bold text-slate-700 flex items-center">
-                        <i class="fas fa-briefcase mr-2 text-blue-500"></i>Experiencia
-                    </button>
-                    <button onclick="app.addExperience()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition"><i class="fas fa-plus"></i></button>
+            <div class="bg-white rounded border border-gray-200 overflow-hidden">
+                <div class="flex justify-between items-center p-2.5 bg-slate-50 border-b border-gray-100">
+                    <button onclick="app.toggleSection('sec-experience')" class="text-xs font-bold text-slate-700 uppercase">Experiencia</button>
+                    <button onclick="app.addExperience()" class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
                 </div>
-                <div id="sec-experience" class="p-4 space-y-4 hidden">
-                    <div id="experience-list" class="space-y-4"></div>
+                <div id="sec-experience" class="p-3 space-y-3 hidden">
+                    <div id="experience-list" class="space-y-3"></div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div class="flex justify-between items-center p-3 bg-slate-50 border-b border-gray-100">
-                    <button onclick="app.toggleSection('sec-projects')" class="text-sm font-bold text-slate-700 flex items-center">
-                        <i class="fas fa-code mr-2 text-blue-500"></i>Proyectos
-                    </button>
-                    <button onclick="app.addProject()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition"><i class="fas fa-plus"></i></button>
+            <div class="bg-white rounded border border-gray-200 overflow-hidden">
+                <div class="flex justify-between items-center p-2.5 bg-slate-50 border-b border-gray-100">
+                    <button onclick="app.toggleSection('sec-projects')" class="text-xs font-bold text-slate-700 uppercase">Proyectos</button>
+                    <button onclick="app.addProject()" class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
                 </div>
-                <div id="sec-projects" class="p-4 space-y-4 hidden">
-                    <div id="projects-list" class="space-y-4"></div>
+                <div id="sec-projects" class="p-3 space-y-3 hidden">
+                    <div id="projects-list" class="space-y-3"></div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div class="flex justify-between items-center p-3 bg-slate-50 border-b border-gray-100">
-                    <button onclick="app.toggleSection('sec-education')" class="text-sm font-bold text-slate-700 flex items-center">
-                        <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>Educación
-                    </button>
-                    <button onclick="app.addEducation()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition"><i class="fas fa-plus"></i></button>
+            <div class="bg-white rounded border border-gray-200 overflow-hidden">
+                <div class="flex justify-between items-center p-2.5 bg-slate-50 border-b border-gray-100">
+                    <button onclick="app.toggleSection('sec-education')" class="text-xs font-bold text-slate-700 uppercase">Educación</button>
+                    <button onclick="app.addEducation()" class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
                 </div>
-                <div id="sec-education" class="p-4 space-y-4 hidden">
-                    <div id="education-list" class="space-y-4"></div>
+                <div id="sec-education" class="p-3 space-y-3 hidden">
+                    <div id="education-list" class="space-y-3"></div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <button onclick="app.toggleSection('sec-skills')" class="w-full flex justify-between items-center p-3 bg-slate-50 hover:bg-slate-100 transition border-b border-gray-100 text-sm font-bold text-slate-700">
-                    <span><i class="fas fa-tools mr-2 text-blue-500"></i>Habilidades & Idiomas</span>
-                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+            <div class="bg-white rounded border border-gray-200 overflow-hidden">
+                <button onclick="app.toggleSection('sec-skills')" class="w-full flex justify-between items-center p-2.5 bg-slate-50 hover:bg-slate-100 border-b border-gray-100 text-xs font-bold text-slate-700 uppercase">
+                    <span>Habilidades</span><i class="fas fa-chevron-down"></i>
                 </button>
-                <div id="sec-skills" class="p-4 hidden">
-                    <label class="text-xs font-bold text-gray-500 block mb-1">Tecnologías (Hard Skills)</label>
-                    <textarea placeholder="Java, Python, React, SQL..." data-model="skills.hard" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none mb-3"></textarea>
-                    
-                    <label class="text-xs font-bold text-gray-500 block mb-1">Idiomas</label>
-                    <textarea placeholder="Español (Nativo), Inglés (C1)..." data-model="skills.languages" class="w-full text-sm p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></textarea>
+                <div id="sec-skills" class="p-3 hidden">
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1">Hard Skills</label>
+                    <textarea data-model="skills.hard" class="w-full text-xs p-2 border rounded mb-2 h-16"></textarea>
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1">Idiomas</label>
+                    <textarea data-model="skills.languages" class="w-full text-xs p-2 border rounded h-10"></textarea>
                 </div>
-            </div>
-            
-            <div class="text-center text-[10px] text-gray-400 pt-5 pb-10">
-                ATS-CV Builder Pro &copy; 2023 - Local Storage Enabled
             </div>
         </div>
     </aside>
 
-    <main class="flex-1 bg-gray-200 flex justify-center overflow-y-auto p-4 md:p-8 relative">
-        <div id="preview-container" class="print-only a4-page text-slate-900 leading-normal">
+    <main class="flex-1 bg-gray-300 flex justify-center overflow-y-auto p-4 md:p-8 relative">
+        <div id="preview-container" class="print-only a4-page text-slate-900">
             </div>
     </main>
 
     <script>
         const app = {
             state: {
-                config: {
-                    region: 'global', // 'global' or 'latam'
-                },
-                personal: {
-                    name: '',
-                    title: '',
-                    email: '',
-                    phone: '',
-                    linkedin: '',
-                    website: '',
-                    location: '',
-                    dni: '',
-                    age: ''
-                },
-                summary: '',
-                experience: [],
-                projects: [],
-                education: [],
-                skills: {
-                    hard: '',
-                    languages: ''
-                }
+                config: { region: 'global' },
+                personal: { name: '', title: '', email: '', phone: '', linkedin: '', website: '', location: '', dni: '', age: '' },
+                summary: '', experience: [], projects: [], education: [], skills: { hard: '', languages: '' }
             },
 
-            // Dummy Data
             dummyData: {
                 config: { region: 'global' },
                 personal: {
                     name: 'Alex Johnson',
-                    title: 'Senior Full Stack Developer',
-                    email: 'alex.dev@example.com',
-                    phone: '+1 555-0123',
-                    linkedin: 'linkedin.com/in/alexjohnson',
+                    title: 'Full Stack Developer',
+                    email: 'alex.dev@email.com',
+                    phone: '+54 11 1234 5678',
+                    linkedin: 'in/alexjohnson',
                     website: 'github.com/alexcode',
-                    location: 'Buenos Aires, Argentina',
-                    dni: '12.345.678',
-                    age: '32 Años'
+                    location: 'Buenos Aires', dni: 'XX.XXX.XXX', age: '30 Años'
                 },
-                summary: 'Ingeniero de Software orientado a resultados con más de 8 años de experiencia diseñando y escalando aplicaciones web. Experto en arquitectura cloud y optimización de rendimiento. Historial comprobado de liderazgo técnico en entornos ágiles.',
+                summary: 'Desarrollador con foco en performance y escalabilidad. Especialista en arquitecturas limpias y reducción de deuda técnica.',
                 experience: [
-                    {
-                        company: 'Tech Solutions Inc.',
-                        role: 'Tech Lead',
-                        start: '01/2021',
-                        end: 'Presente',
-                        description: '• Lideré la migración de un monolito legado a microservicios usando Node.js y Docker, reduciendo el tiempo de despliegue en un 40%.\n• Implementé pipelines de CI/CD en AWS.\n• Mentoring de 5 desarrolladores junior.'
-                    },
-                    {
-                        company: 'Creative Web Agency',
-                        role: 'Full Stack Developer',
-                        start: '06/2018',
-                        end: '12/2020',
-                        description: '• Desarrollé interfaces de usuario complejas con React y Redux.\n• Optimicé consultas SQL mejorando la velocidad de carga de reportes en un 60%.'
-                    }
+                    { company: 'Tech Corp', role: 'Senior Developer', start: '2021', end: 'Presente', description: '• Reducción de tiempos de carga en un 40%.\n• Liderazgo de equipo de 3 personas.' },
+                    { company: 'Web Studio', role: 'Backend Dev', start: '2019', end: '2021', description: '• APIs RESTful con Node.js.\n• Optimización SQL.' }
                 ],
-                projects: [
-                    {
-                        name: 'E-Commerce Analytics Dashboard',
-                        tech: 'Vue.js, Firebase, D3.js',
-                        description: 'Plataforma en tiempo real para visualizar métricas de ventas. Atiende a +10k usuarios concurrentes.'
-                    }
-                ],
-                education: [
-                    {
-                        school: 'Universidad Tecnológica',
-                        degree: 'Ingeniería en Sistemas',
-                        year: '2014 - 2019'
-                    }
-                ],
-                skills: {
-                    hard: 'JavaScript (ES6+), TypeScript, React, Node.js, PostgreSQL, Docker, AWS, Git, TailwindCSS',
-                    languages: 'Español (Nativo), Inglés (C1 Avanzado)'
-                }
+                projects: [{ name: 'SaaS Analytics', tech: 'Vue, Firebase', description: 'Dashboard en tiempo real para métricas de ventas.' }],
+                education: [{ school: 'UTN', degree: 'Ing. Sistemas', year: '2019' }],
+                skills: { hard: 'JS, React, Node, SQL, Docker, AWS', languages: 'Inglés (C1)' }
             },
 
             init() {
-                this.loadFromStorage();
+                const stored = localStorage.getItem('ats-cv-compact');
+                if (stored) this.state = JSON.parse(stored);
                 this.bindEvents();
+                this.setRegion(this.state.config.region || 'global', false);
                 this.renderAll();
             },
 
-            loadFromStorage() {
-                const stored = localStorage.getItem('ats-cv-state');
-                if (stored) {
-                    this.state = JSON.parse(stored);
-                }
-                // Apply region UI state
-                this.setRegion(this.state.config.region || 'global', false);
-            },
-
             save() {
-                localStorage.setItem('ats-cv-state', JSON.stringify(this.state));
+                localStorage.setItem('ats-cv-compact', JSON.stringify(this.state));
                 this.renderPreview();
             },
 
             bindEvents() {
-                // Generic Input binding for simple fields
                 document.querySelectorAll('input[data-model], textarea[data-model]').forEach(input => {
                     const path = input.dataset.model.split('.');
                     input.value = path.length === 2 ? this.state[path[0]][path[1]] : this.state[path[0]];
-                    
                     input.addEventListener('input', (e) => {
-                        if (path.length === 2) {
-                            this.state[path[0]][path[1]] = e.target.value;
-                        } else {
-                            this.state[path[0]] = e.target.value;
-                        }
+                        if (path.length === 2) this.state[path[0]][path[1]] = e.target.value;
+                        else this.state[path[0]] = e.target.value;
                         this.save();
                     });
                 });
             },
 
-            setRegion(region, updateState = true) {
-                if(updateState) {
-                    this.state.config.region = region;
-                    this.save();
-                }
-
-                // Update UI Buttons
-                const btnGlobal = document.getElementById('btn-global');
-                const btnLatam = document.getElementById('btn-latam');
-                const latamFields = document.querySelectorAll('.region-latam');
-                const latamWarning = document.getElementById('latam-warning');
-
-                if (region === 'global') {
-                    btnGlobal.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-                    btnGlobal.classList.remove('text-slate-600', 'hover:bg-gray-200');
-                    btnLatam.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-                    btnLatam.classList.add('text-slate-600', 'hover:bg-gray-200');
-                    latamFields.forEach(el => el.classList.add('hidden'));
-                    latamWarning.classList.add('hidden');
-                } else {
-                    btnLatam.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-                    btnLatam.classList.remove('text-slate-600', 'hover:bg-gray-200');
-                    btnGlobal.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-                    btnGlobal.classList.add('text-slate-600', 'hover:bg-gray-200');
-                    latamFields.forEach(el => el.classList.remove('hidden'));
-                    latamWarning.classList.remove('hidden');
-                }
+            setRegion(r, update=true) {
+                if(update) { this.state.config.region = r; this.save(); }
+                const isG = r === 'global';
+                document.getElementById('btn-global').className = isG ? 'text-xs px-2 py-1 rounded font-medium bg-blue-600 text-white' : 'text-xs px-2 py-1 rounded font-medium text-slate-600 hover:bg-gray-200';
+                document.getElementById('btn-latam').className = !isG ? 'text-xs px-2 py-1 rounded font-medium bg-blue-600 text-white' : 'text-xs px-2 py-1 rounded font-medium text-slate-600 hover:bg-gray-200';
+                document.querySelectorAll('.region-latam').forEach(el => isG ? el.classList.add('hidden') : el.classList.remove('hidden'));
                 this.renderPreview();
             },
 
-            toggleSection(id) {
-                const el = document.getElementById(id);
-                el.classList.toggle('hidden');
-                // Simple accordion logic: scroll to view if needed
-            },
+            toggleSection(id) { document.getElementById(id).classList.toggle('hidden'); },
 
-            // --- LIST MANAGEMENT ---
-
-            renderListInputs(containerId, dataArray, templateFn) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = '';
-                dataArray.forEach((item, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'bg-gray-50 p-3 rounded border border-gray-200 relative group';
-                    div.innerHTML = templateFn(item, index);
-                    container.appendChild(div);
-
-                    // Bind inputs in this dynamic item
-                    div.querySelectorAll('input, textarea').forEach(input => {
-                        input.addEventListener('input', (e) => {
-                            const field = e.target.dataset.field;
-                            this.state[containerId.replace('-list', '')][index][field] = e.target.value;
+            renderList(id, data, tpl) {
+                const c = document.getElementById(id); c.innerHTML = '';
+                data.forEach((item, i) => {
+                    const d = document.createElement('div');
+                    d.className = 'bg-gray-50 p-2 rounded border border-gray-200 relative group';
+                    d.innerHTML = tpl(item, i);
+                    c.appendChild(d);
+                    d.querySelectorAll('input, textarea').forEach(inp => {
+                        inp.addEventListener('input', e => {
+                            this.state[id.replace('-list','')][i][e.target.dataset.field] = e.target.value;
                             this.save();
                         });
                     });
                 });
             },
 
-            addExperience() {
-                this.state.experience.unshift({ company: '', role: '', start: '', end: '', description: '' });
-                this.save();
-                this.renderExperienceInputs();
-                this.toggleSection('sec-experience'); // ensure visible
-                const sec = document.getElementById('sec-experience');
-                if(sec.classList.contains('hidden')) sec.classList.remove('hidden');
-            },
-
-            removeExperience(index) {
-                this.state.experience.splice(index, 1);
-                this.save();
-                this.renderExperienceInputs();
-            },
-
+            addExperience() { this.state.experience.unshift({company:'',role:'',start:'',end:'',description:''}); this.save(); this.renderExperienceInputs(); document.getElementById('sec-experience').classList.remove('hidden'); },
+            removeExperience(i) { this.state.experience.splice(i,1); this.save(); this.renderExperienceInputs(); },
             renderExperienceInputs() {
-                this.renderListInputs('experience-list', this.state.experience, (item, index) => `
-                    <button onclick="app.removeExperience(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
-                    <div class="grid grid-cols-2 gap-2 mb-2 pr-6">
-                        <input type="text" data-field="role" value="${item.role}" placeholder="Cargo" class="w-full text-xs p-2 border rounded">
-                        <input type="text" data-field="company" value="${item.company}" placeholder="Empresa" class="w-full text-xs p-2 border rounded">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <input type="text" data-field="start" value="${item.start}" placeholder="Inicio (MM/YYYY)" class="w-full text-xs p-2 border rounded">
-                        <input type="text" data-field="end" value="${item.end}" placeholder="Fin" class="w-full text-xs p-2 border rounded">
-                    </div>
-                    <textarea data-field="description" placeholder="Descripción con bullets (• Logro...)" class="w-full text-xs p-2 border rounded h-20">${item.description}</textarea>
+                this.renderList('experience-list', this.state.experience, (it, i) => `
+                    <button onclick="app.removeExperience(${i})" class="absolute top-1 right-1 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+                    <div class="grid grid-cols-2 gap-1 mb-1 pr-4"><input data-field="role" value="${it.role}" placeholder="Cargo" class="w-full text-xs p-1 border rounded"><input data-field="company" value="${it.company}" placeholder="Empresa" class="w-full text-xs p-1 border rounded"></div>
+                    <div class="grid grid-cols-2 gap-1 mb-1"><input data-field="start" value="${it.start}" placeholder="Inicio" class="w-full text-xs p-1 border rounded"><input data-field="end" value="${it.end}" placeholder="Fin" class="w-full text-xs p-1 border rounded"></div>
+                    <textarea data-field="description" placeholder="• Logro..." class="w-full text-xs p-1 border rounded h-16">${it.description}</textarea>
                 `);
             },
 
-            addProject() {
-                this.state.projects.unshift({ name: '', tech: '', description: '' });
-                this.save();
-                this.renderProjectInputs();
-                const sec = document.getElementById('sec-projects');
-                if(sec.classList.contains('hidden')) sec.classList.remove('hidden');
-            },
-
-            removeProject(index) {
-                this.state.projects.splice(index, 1);
-                this.save();
-                this.renderProjectInputs();
-            },
-
+            addProject() { this.state.projects.unshift({name:'',tech:'',description:''}); this.save(); this.renderProjectInputs(); document.getElementById('sec-projects').classList.remove('hidden'); },
+            removeProject(i) { this.state.projects.splice(i,1); this.save(); this.renderProjectInputs(); },
             renderProjectInputs() {
-                this.renderListInputs('projects-list', this.state.projects, (item, index) => `
-                    <button onclick="app.removeProject(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
-                    <div class="mb-2 pr-6">
-                        <input type="text" data-field="name" value="${item.name}" placeholder="Nombre del Proyecto" class="w-full text-xs p-2 border rounded font-bold">
-                    </div>
-                    <div class="mb-2">
-                        <input type="text" data-field="tech" value="${item.tech}" placeholder="Tecnologías (React, AWS...)" class="w-full text-xs p-2 border rounded">
-                    </div>
-                    <textarea data-field="description" placeholder="Descripción breve" class="w-full text-xs p-2 border rounded h-16">${item.description}</textarea>
+                this.renderList('projects-list', this.state.projects, (it, i) => `
+                    <button onclick="app.removeProject(${i})" class="absolute top-1 right-1 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+                    <div class="mb-1 pr-4"><input data-field="name" value="${it.name}" placeholder="Proyecto" class="w-full text-xs p-1 border rounded font-bold"></div>
+                    <div class="mb-1"><input data-field="tech" value="${it.tech}" placeholder="Tech Stack" class="w-full text-xs p-1 border rounded"></div>
+                    <textarea data-field="description" placeholder="Desc" class="w-full text-xs p-1 border rounded h-12">${it.description}</textarea>
                 `);
             },
 
-            addEducation() {
-                this.state.education.unshift({ school: '', degree: '', year: '' });
-                this.save();
-                this.renderEducationInputs();
-                const sec = document.getElementById('sec-education');
-                if(sec.classList.contains('hidden')) sec.classList.remove('hidden');
-            },
-
-            removeEducation(index) {
-                this.state.education.splice(index, 1);
-                this.save();
-                this.renderEducationInputs();
-            },
-
+            addEducation() { this.state.education.unshift({school:'',degree:'',year:''}); this.save(); this.renderEducationInputs(); document.getElementById('sec-education').classList.remove('hidden'); },
+            removeEducation(i) { this.state.education.splice(i,1); this.save(); this.renderEducationInputs(); },
             renderEducationInputs() {
-                this.renderListInputs('education-list', this.state.education, (item, index) => `
-                    <button onclick="app.removeEducation(${index})" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
-                    <div class="mb-2 pr-6">
-                        <input type="text" data-field="school" value="${item.school}" placeholder="Institución" class="w-full text-xs p-2 border rounded font-bold">
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" data-field="degree" value="${item.degree}" placeholder="Título" class="w-full text-xs p-2 border rounded">
-                        <input type="text" data-field="year" value="${item.year}" placeholder="Año / Periodo" class="w-full text-xs p-2 border rounded">
-                    </div>
+                this.renderList('education-list', this.state.education, (it, i) => `
+                    <button onclick="app.removeEducation(${i})" class="absolute top-1 right-1 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+                    <div class="mb-1 pr-4"><input data-field="school" value="${it.school}" placeholder="Institución" class="w-full text-xs p-1 border rounded font-bold"></div>
+                    <div class="grid grid-cols-2 gap-1"><input data-field="degree" value="${it.degree}" placeholder="Título" class="w-full text-xs p-1 border rounded"><input data-field="year" value="${it.year}" placeholder="Año" class="w-full text-xs p-1 border rounded"></div>
                 `);
             },
-
-            // --- RENDER PREVIEW (CORE) ---
 
             renderPreview() {
                 const p = this.state.personal;
-                const isLatam = this.state.config.region === 'latam';
+                const latam = this.state.config.region === 'latam';
                 
-                // Construct Contact Line
-                let contactParts = [];
-                if (p.email) contactParts.push(p.email);
-                if (p.phone) contactParts.push(p.phone);
-                if (isLatam && p.location) contactParts.push(p.location);
-                if (p.linkedin) contactParts.push(p.linkedin.replace(/^https?:\/\//, ''));
-                if (p.website) contactParts.push(p.website.replace(/^https?:\/\//, ''));
-                
-                let latamExtra = '';
-                if (isLatam) {
-                    let parts = [];
-                    if (p.dni) parts.push(`DNI: ${p.dni}`);
-                    if (p.age) parts.push(p.age);
-                    if (parts.length > 0) latamExtra = `<div class="ats-text mt-1 text-slate-600">${parts.join(' | ')}</div>`;
-                }
+                const contacts = [p.email, p.phone, (latam?p.location:null), p.linkedin.replace(/^https?:\/\//,''), p.website.replace(/^https?:\/\//,'')].filter(Boolean);
+                const latamInfo = latam ? [p.dni?`DNI: ${p.dni}`:null, p.age].filter(Boolean).join(' | ') : '';
 
-                // Skills formatting
-                let skillsHTML = '';
-                if (this.state.skills.hard || this.state.skills.languages) {
-                    skillsHTML = `<div class="ats-section-title">Habilidades Técnicas & Idiomas</div><div class="ats-text">`;
-                    if (this.state.skills.hard) skillsHTML += `<div><span class="ats-bold">Tecnologías:</span> ${this.state.skills.hard}</div>`;
-                    if (this.state.skills.languages) skillsHTML += `<div class="mt-1"><span class="ats-bold">Idiomas:</span> ${this.state.skills.languages}</div>`;
-                    skillsHTML += `</div>`;
-                }
+                let html = `
+                    <div class="border-b-2 border-slate-800 pb-2 mb-3">
+                        <div class="ats-name">${p.name}</div>
+                        <div class="ats-role-header">${p.title}</div>
+                        <div class="ats-contact text-slate-700">${contacts.join(' | ')}</div>
+                        ${latamInfo ? `<div class="ats-text mt-0.5 text-slate-600 text-xs">${latamInfo}</div>` : ''}
+                    </div>`;
 
-                // Experience HTML
-                let expHTML = '';
-                if (this.state.experience.length > 0) {
-                    expHTML = `<div class="ats-section-title">Experiencia Profesional</div>`;
-                    this.state.experience.forEach(item => {
-                        // Handle newlines as breaks for simple formatting, but ATS prefers lists
-                        const descFormatted = item.description.split('\n').map(line => {
-                             if(line.trim().startsWith('•') || line.trim().startsWith('-')) {
-                                 return `<div class="pl-3">${line}</div>`;
-                             }
-                             return `<div>${line}</div>`;
-                        }).join('');
+                if(this.state.summary) html += `<div class="ats-section-title">Perfil</div><div class="ats-text text-justify mb-2">${this.state.summary}</div>`;
 
-                        expHTML += `
-                        <div class="mb-4 break-inside-avoid">
-                            <div class="flex justify-between items-baseline mb-1">
-                                <div class="ats-role text-slate-900">${item.role}</div>
-                                <div class="ats-text text-right font-medium text-slate-700 whitespace-nowrap">${item.start} - ${item.end}</div>
-                            </div>
-                            <div class="ats-text font-bold text-slate-700 mb-1 italic">${item.company}</div>
-                            <div class="ats-text text-slate-800 text-justify">${descFormatted}</div>
+                if(this.state.experience.length) {
+                    html += `<div class="ats-section-title">Experiencia</div>`;
+                    this.state.experience.forEach(it => {
+                        const desc = it.description.split('\n').map(l => l.trim().startsWith('•') ? `<div class="pl-3">${l}</div>` : `<div>${l}</div>`).join('');
+                        html += `<div class="mb-3 break-inside-avoid">
+                            <div class="ats-job-row"><div class="ats-role">${it.role}</div><div class="ats-date">${it.start} - ${it.end}</div></div>
+                            <div class="ats-company">${it.company}</div>
+                            <div class="ats-text text-slate-800 text-justify">${desc}</div>
                         </div>`;
                     });
                 }
 
-                // Projects HTML
-                let projHTML = '';
-                if (this.state.projects.length > 0) {
-                    projHTML = `<div class="ats-section-title">Proyectos Destacados</div>`;
-                    this.state.projects.forEach(item => {
-                        projHTML += `
-                        <div class="mb-3 break-inside-avoid">
-                            <div class="flex justify-between items-baseline">
-                                <span class="ats-text font-bold">${item.name}</span>
-                                <span class="ats-text text-sm italic text-slate-600">${item.tech}</span>
-                            </div>
-                            <div class="ats-text">${item.description}</div>
+                if(this.state.projects.length) {
+                    html += `<div class="ats-section-title">Proyectos</div>`;
+                    this.state.projects.forEach(it => {
+                        html += `<div class="mb-2 break-inside-avoid">
+                            <div class="flex justify-between items-baseline"><span class="ats-text font-bold">${it.name}</span><span class="ats-text text-xs italic text-slate-600">${it.tech}</span></div>
+                            <div class="ats-text">${it.description}</div>
                         </div>`;
                     });
                 }
 
-                // Education HTML
-                let eduHTML = '';
-                if (this.state.education.length > 0) {
-                    eduHTML = `<div class="ats-section-title">Educación</div>`;
-                    this.state.education.forEach(item => {
-                        eduHTML += `
-                        <div class="mb-2 break-inside-avoid flex justify-between">
-                            <div>
-                                <div class="ats-text font-bold">${item.school}</div>
-                                <div class="ats-text">${item.degree}</div>
-                            </div>
-                            <div class="ats-text text-right whitespace-nowrap">${item.year}</div>
-                        </div>`;
+                if(this.state.education.length) {
+                    html += `<div class="ats-section-title">Educación</div>`;
+                    this.state.education.forEach(it => {
+                        html += `<div class="mb-1 break-inside-avoid flex justify-between"><div><span class="ats-text font-bold">${it.school}</span> <span class="ats-text"> - ${it.degree}</span></div><div class="ats-text text-right whitespace-nowrap">${it.year}</div></div>`;
                     });
                 }
 
-                // HTML Assembly
-                const html = `
-                    <div class="border-b-2 border-slate-800 pb-4 mb-4">
-                        <div class="ats-name tracking-wide text-slate-900">${p.name}</div>
-                        <div class="ats-role text-blue-700">${p.title}</div>
-                        <div class="ats-contact text-slate-700 mt-2">
-                            ${contactParts.join(' | ')}
-                        </div>
-                        ${latamExtra}
-                    </div>
-
-                    ${this.state.summary ? `
-                        <div class="ats-section-title">Perfil Profesional</div>
-                        <div class="ats-text text-justify mb-4">${this.state.summary}</div>
-                    ` : ''}
-
-                    ${expHTML}
-                    ${projHTML}
-                    ${eduHTML}
-                    ${skillsHTML}
-                `;
+                if(this.state.skills.hard || this.state.skills.languages) {
+                    html += `<div class="ats-section-title">Skills</div><div class="ats-text">`;
+                    if(this.state.skills.hard) html += `<div><b>Tech:</b> ${this.state.skills.hard}</div>`;
+                    if(this.state.skills.languages) html += `<div><b>Idiomas:</b> ${this.state.skills.languages}</div>`;
+                    html += `</div>`;
+                }
 
                 document.getElementById('preview-container').innerHTML = html;
             },
 
             renderAll() {
-                // Populate inputs
-                document.querySelectorAll('input[data-model], textarea[data-model]').forEach(input => {
-                    const path = input.dataset.model.split('.');
-                    input.value = path.length === 2 ? this.state[path[0]][path[1]] : this.state[path[0]];
+                document.querySelectorAll('input[data-model], textarea[data-model]').forEach(inp => {
+                    const p = inp.dataset.model.split('.');
+                    inp.value = p.length === 2 ? this.state[p[0]][p[1]] : this.state[p[0]];
                 });
-
-                this.renderExperienceInputs();
-                this.renderProjectInputs();
-                this.renderEducationInputs();
-                this.renderPreview();
-                
-                // Show lists if data exists
-                if(this.state.experience.length > 0) document.getElementById('sec-experience').classList.remove('hidden');
-                if(this.state.education.length > 0) document.getElementById('sec-education').classList.remove('hidden');
+                this.renderExperienceInputs(); this.renderProjectInputs(); this.renderEducationInputs(); this.renderPreview();
+                ['sec-experience','sec-education'].forEach(id => { if(this.state[id.replace('sec-','')].length) document.getElementById(id).classList.remove('hidden'); });
             },
 
-            loadExample() {
-                if(confirm('¿Cargar datos de ejemplo? Esto borrará tus datos actuales.')) {
-                    this.state = JSON.parse(JSON.stringify(this.dummyData));
-                    this.state.config.region = 'global'; // reset to default view
-                    this.save();
-                    this.setRegion('global', false);
-                    this.renderAll();
-                }
-            },
-
-            resetData() {
-                if(confirm('¿Estás seguro de borrar TODO?')) {
-                    localStorage.removeItem('ats-cv-state');
-                    location.reload();
-                }
-            }
+            loadExample() { if(confirm('¿Cargar ejemplo?')) { this.state=JSON.parse(JSON.stringify(this.dummyData)); this.setRegion('global'); this.renderAll(); } },
+            resetData() { if(confirm('¿Borrar todo?')) { localStorage.removeItem('ats-cv-compact'); location.reload(); } }
         };
 
-        // Init App
-        document.addEventListener('DOMContentLoaded', () => {
-            app.init();
-        });
+        document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
 </html>
