@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATS Resume Builder PRO - Payment Demo</title>
+    <title>ATS Builder v6.0 - Print Fix & Menu</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -12,30 +12,69 @@
             --bg-editor: #f3f4f6;
             --bg-preview: #52525b;
             --border: #d1d5db;
+            --sidebar-width: 400px; /* Ancho fijo para control */
         }
 
         body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
 
-        /* --- EDITOR --- */
-        .editor-pane { width: 35%; background: var(--bg-editor); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
-        .editor-header { padding: 15px 20px; background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        /* --- BOTÓN DE MENÚ FLOTANTE --- */
+        .menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2000;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+        .menu-toggle:hover { transform: scale(1.1); }
+        /* Ocultar el botón si el menú está abierto (opcional, aquí lo dejo siempre visible para alternar) */
+
+        /* --- EDITOR (ANIMADO) --- */
+        .editor-pane { 
+            width: var(--sidebar-width); 
+            background: var(--bg-editor); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 1000; 
+            transition: margin-left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            margin-left: 0; /* Estado abierto */
+            position: relative;
+        }
+
+        /* Clase para cerrar el menú */
+        .editor-pane.closed {
+            margin-left: calc(var(--sidebar-width) * -1);
+        }
+
+        .editor-header { padding: 15px 20px 15px 60px; /* Padding extra a la izq para el boton */ background: white; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .editor-content { flex: 1; overflow-y: auto; padding: 20px; }
 
+        /* Estilos generales del editor */
         .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #1a252f; }
         .btn-outline { background: white; border: 1px solid #ccc; color: #333; }
         .btn-danger { background: #fee2e2; color: #b91c1c; }
         
         .section-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .section-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 15px; color: var(--primary); border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .form-group { margin-bottom: 12px; }
-        .form-control { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; }
+        .form-control { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; margin-bottom: 10px; }
         textarea.form-control { resize: vertical; min-height: 60px; font-family: inherit; }
         .item-card { background: #f9fafb; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 8px; position: relative; }
         .delete-btn { position: absolute; top: 8px; right: 8px; color: #ef4444; cursor: pointer; }
         
-        /* Botones de alineación y toggle */
+        /* Alineación y Toggle */
         .align-group { display: flex; border-radius: 4px; overflow: hidden; margin-top: 10px; }
         .align-btn { background: white; border: 1px solid #ccc; color: #555; padding: 8px 15px; cursor: pointer; flex: 1; }
         .align-btn.active { background: var(--active); color: white; border-color: var(--active); }
@@ -48,58 +87,43 @@
         input:checked + .slider:before { transform: translateX(20px); }
 
         /* --- PREVIEW --- */
-        .preview-pane { width: 65%; background: var(--bg-preview); padding: 30px; overflow-y: auto; display: flex; justify-content: center; position: relative; }
+        .preview-pane { 
+            flex: 1; /* Ocupa el resto del espacio */
+            background: var(--bg-preview); 
+            padding: 30px; 
+            overflow-y: auto; 
+            display: flex; 
+            justify-content: center; 
+            position: relative; 
+            transition: all 0.4s;
+        }
         
-        #resume-container { position: relative; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+        #resume-container { position: relative; box-shadow: 0 0 15px rgba(0,0,0,0.2); height: fit-content; }
 
         #resume-preview {
             background: white; width: 210mm; min-height: 297mm; padding: 20mm 20mm;
             box-sizing: border-box; color: #000; position: relative; z-index: 1;
+            overflow: visible; /* IMPORTANTE: Evita scroll interno */
         }
 
-        /* --- WATERMARK (MARCA DE AGUA) --- */
+        /* --- WATERMARK --- */
         .watermark-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 999; /* Por encima del texto */
-            pointer-events: none; /* Permite seleccionar texto abajo, pero molesta visualmente */
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-content: center;
-            overflow: hidden;
-            opacity: 0.15; /* Transparencia */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 999; pointer-events: none; display: flex; flex-wrap: wrap;
+            justify-content: center; align-content: center; overflow: hidden; opacity: 0.15;
         }
+        .watermark-text { font-size: 24pt; font-weight: bold; color: red; transform: rotate(-45deg); margin: 50px; white-space: nowrap; user-select: none; }
 
-        .watermark-text {
-            font-size: 24pt;
-            font-weight: bold;
-            color: red;
-            transform: rotate(-45deg);
-            margin: 50px;
-            white-space: nowrap;
-            user-select: none;
-        }
-
-        /* --- PAYMENT MODAL --- */
+        /* --- MODAL PAGO --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 2000;
+            background: rgba(0,0,0,0.6); z-index: 3000;
             display: none; justify-content: center; align-items: center;
         }
-        .modal-content {
-            background: white; padding: 30px; border-radius: 10px; width: 400px; text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        .price-tag { font-size: 2.5rem; color: var(--primary); font-weight: bold; margin: 10px 0; }
-        .pay-btn {
-            background: #009ee3; /* Color MercadoPago aprox */
-            color: white; font-size: 1.1rem; padding: 12px 24px; border-radius: 6px;
-            border: none; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold;
-        }
-        .pay-btn:hover { background: #0081b9; }
-
-        /* --- CV STYLES --- */
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .pay-btn { background: #009ee3; color: white; padding: 12px 24px; border-radius: 6px; border: none; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+        
+        /* --- ESTILOS DEL CV --- */
         .cv-header-container { display: flex; gap: 25px; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 20px; }
         .header-left { flex-direction: row; text-align: left; }
         .header-center { flex-direction: column; align-items: center; text-align: center; }
@@ -122,41 +146,66 @@
         .cv-lang-item { margin-bottom: 4px; }
         .cv-lang-name { font-weight: bold; }
 
+        /* --- SOLUCIÓN CRÍTICA DE IMPRESIÓN --- */
         @media print {
-            .editor-pane, .modal-overlay { display: none; }
-            .preview-pane { width: 100%; padding: 0; display: block; height: auto; }
-            #resume-container { box-shadow: none; }
-            #resume-preview { width: 100%; margin: 0; padding: 0; }
-            .watermark-overlay { display: none; } /* En teoría no se imprime si pagó, lógica en JS */
+            body, html { 
+                height: auto !important; 
+                overflow: visible !important; 
+                background: white !important;
+            }
+            .editor-pane, .menu-toggle, .modal-overlay { 
+                display: none !important; 
+            }
+            .preview-pane { 
+                width: 100% !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                height: auto !important; 
+                overflow: visible !important;
+                display: block !important;
+            }
+            #resume-container { 
+                box-shadow: none !important; 
+                overflow: visible !important;
+                margin: 0 !important;
+            }
+            #resume-preview { 
+                width: 100% !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+                border: none !important;
+                overflow: visible !important; /* Clave para quitar barras */
+            }
+            /* Ocultar barras de scroll forzosamente */
+            ::-webkit-scrollbar { display: none; }
+            
             @page { margin: 15mm 20mm; size: A4; }
         }
     </style>
 </head>
 <body>
+    
+    <button class="menu-toggle" onclick="app.toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <div class="modal-overlay" id="paymentModal">
         <div class="modal-content">
-            <h2 style="margin-top:0">Descarga tu CV Profesional</h2>
-            <p style="color:#666">Elimina la marca de agua y descarga en PDF optimizado para ATS.</p>
-            <div class="price-tag">$5.00 USD</div>
-            <ul style="text-align:left; color:#555; margin-bottom:20px; font-size:0.9rem">
-                <li><i class="fas fa-check" style="color:green"></i> Formato Aceptado por Robots (ATS)</li>
-                <li><i class="fas fa-check" style="color:green"></i> Sin Marcas de Agua</li>
-                <li><i class="fas fa-check" style="color:green"></i> Calidad de Impresión Alta</li>
-            </ul>
-            <button class="pay-btn" onclick="app.processPayment()">
-                <i class="fas fa-credit-card"></i> Pagar y Descargar
-            </button>
-            <button style="margin-top:10px; background:none; border:none; color:#888; cursor:pointer; text-decoration:underline" onclick="app.closeModal()">Seguir editando</button>
+            <h2 style="margin-top:0">Descarga Premium</h2>
+            <div style="font-size:2.5rem; color:var(--primary); font-weight:bold; margin:10px 0">$5.00</div>
+            <p style="color:#666">Quita la marca de agua y obtén formato limpio.</p>
+            <button class="pay-btn" onclick="app.processPayment()">Pagar ahora</button>
+            <button style="margin-top:10px; background:none; border:none; color:#888; cursor:pointer; text-decoration:underline" onclick="app.closeModal()">Volver</button>
         </div>
     </div>
 
-    <div class="editor-pane">
+    <div class="editor-pane" id="sidebar">
         <div class="editor-header">
-            <h1 style="margin:0; font-size:1.1rem; color:var(--primary)">ATS Builder PRO</h1>
+            <h1 style="margin:0; font-size:1.1rem; color:var(--primary)">ATS Builder v6</h1>
             <div style="display:flex; gap:5px">
                 <button class="btn btn-outline" onclick="app.loadExample()" title="Ejemplo"><i class="fas fa-magic"></i></button>
                 <button class="btn btn-danger" onclick="app.clearData()" title="Borrar"><i class="fas fa-trash"></i></button>
-                <button class="btn btn-primary" onclick="app.checkPayment()" title="Descargar"><i class="fas fa-download"></i> PDF</button>
+                <button class="btn btn-primary" onclick="app.checkPayment()" title="Descargar"><i class="fas fa-download"></i></button>
             </div>
         </div>
         <div class="editor-content" id="form-container"></div>
@@ -164,8 +213,7 @@
 
     <div class="preview-pane">
         <div id="resume-container">
-            <div class="watermark-overlay" id="watermark">
-                </div>
+            <div class="watermark-overlay" id="watermark"></div>
             <div id="resume-preview"></div>
         </div>
     </div>
@@ -173,7 +221,8 @@
     <script>
         const app = {
             data: {
-                isPaid: false, // ESTADO DE PAGO
+                isPaid: false,
+                isSidebarOpen: true,
                 settings: { showPhoto: true, align: 'left' },
                 photo: null,
                 personal: { name: '', email: '', phone: '', linkedin: '', location: '', summary: '' },
@@ -184,10 +233,26 @@
                 this.loadFromStorage();
                 this.renderForm();
                 this.renderPreview();
-                this.generateWatermark(); // Generar marca de agua al inicio
+                this.generateWatermark();
+                this.applySidebarState();
             },
 
-            // --- LÓGICA DE PAGO ---
+            // --- Lógica del Menú Desplegable ---
+            toggleSidebar() {
+                this.data.isSidebarOpen = !this.data.isSidebarOpen;
+                this.applySidebarState();
+            },
+
+            applySidebarState() {
+                const sidebar = document.getElementById('sidebar');
+                if (this.data.isSidebarOpen) {
+                    sidebar.classList.remove('closed');
+                } else {
+                    sidebar.classList.add('closed');
+                }
+            },
+
+            // --- Lógica de Pago ---
             checkPayment() {
                 if (this.data.isPaid) {
                     window.print();
@@ -197,117 +262,80 @@
             },
 
             processPayment() {
-                // AQUÍ IRÍA LA INTEGRACIÓN CON MERCADOPAGO / STRIPE
-                // Como es una demo, simulamos una carga y éxito
-                const btn = document.querySelector('.pay-btn');
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-                
+                document.querySelector('.pay-btn').innerText = 'Procesando...';
                 setTimeout(() => {
                     this.data.isPaid = true;
                     this.save();
                     this.closeModal();
-                    
-                    // Remover marca de agua visualmente
                     document.getElementById('watermark').style.display = 'none';
-                    
-                    alert("¡Pago exitoso! Tu CV está listo.");
+                    alert("¡Gracias! Descargando...");
                     window.print();
-                    
-                    // Resetear botón por si acaso
-                    btn.innerHTML = '<i class="fas fa-credit-card"></i> Pagar y Descargar';
-                }, 1500);
+                    document.querySelector('.pay-btn').innerText = 'Pagar ahora';
+                }, 1000);
             },
 
-            closeModal() {
-                document.getElementById('paymentModal').style.display = 'none';
-            },
+            closeModal() { document.getElementById('paymentModal').style.display = 'none'; },
 
             generateWatermark() {
-                const wmContainer = document.getElementById('watermark');
-                if(this.data.isPaid) {
-                    wmContainer.style.display = 'none';
-                    return;
-                }
-                
+                const wm = document.getElementById('watermark');
+                if(this.data.isPaid) { wm.style.display = 'none'; return; }
                 let html = '';
-                // Crear muchas marcas de agua repetidas
-                for(let i=0; i<15; i++) {
-                    html += `<div class="watermark-text">VISTA PREVIA • NO PAGADO</div>`;
-                }
-                wmContainer.innerHTML = html;
+                for(let i=0; i<15; i++) html += `<div class="watermark-text">VISTA PREVIA • SIN PAGAR</div>`;
+                wm.innerHTML = html;
             },
 
-            // --- RESTO DE LA APP (Igual que antes) ---
+            // --- Core App ---
             save() {
-                localStorage.setItem('atsResumeDataV5', JSON.stringify(this.data));
+                localStorage.setItem('atsDataV6', JSON.stringify(this.data));
                 this.renderPreview();
             },
 
             loadFromStorage() {
-                const stored = localStorage.getItem('atsResumeDataV5');
+                const stored = localStorage.getItem('atsDataV6');
                 if (stored) {
                     const parsed = JSON.parse(stored);
                     if(!parsed.settings.align) parsed.settings.align = 'left'; 
                     this.data = parsed;
-                    // IMPORTANTE: En producción, no confiarías en LocalStorage para el estado de pago
                 }
             },
 
             clearData() {
-                if(confirm("¿Reiniciar todo? (Perderás el estado de pago en esta demo)")) {
-                    localStorage.removeItem('atsResumeDataV5');
+                if(confirm("¿Reiniciar todo?")) {
+                    localStorage.removeItem('atsDataV6');
                     this.data = {
-                        isPaid: false, // Reset pago
+                        isPaid: false, isSidebarOpen: true,
                         settings: { showPhoto: true, align: 'left' }, photo: null,
                         personal: { name: '', email: '', phone: '', linkedin: '', location: '', summary: '' },
                         experience: [], education: [], languages: [], skills: ''
                     };
                     this.renderForm();
                     this.renderPreview();
-                    this.generateWatermark(); // Restaurar marca de agua
+                    this.generateWatermark();
                     document.getElementById('watermark').style.display = 'flex';
                 }
             },
 
-            handleImageUpload(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => { this.data.photo = e.target.result; this.save(); };
-                    reader.readAsDataURL(file);
+            handleImageUpload(e) {
+                const f = e.target.files[0];
+                if(f) {
+                    const r = new FileReader();
+                    r.onload = (ev) => { this.data.photo = ev.target.result; this.save(); };
+                    r.readAsDataURL(f);
                 }
             },
 
-            togglePhoto() {
-                this.data.settings.showPhoto = !this.data.settings.showPhoto;
-                this.save();
-            },
-
-            setAlign(align) {
-                this.data.settings.align = align;
-                this.save();
-                this.renderForm();
-            },
+            togglePhoto() { this.data.settings.showPhoto = !this.data.settings.showPhoto; this.save(); },
+            setAlign(a) { this.data.settings.align = a; this.save(); this.renderForm(); },
 
             loadExample() {
                 this.data = {
-                    isPaid: false,
-                    settings: { showPhoto: true, align: 'left' },
-                    photo: null,
-                    personal: {
-                        name: "Sofía Martínez",
-                        email: "sofia.dev@email.com",
-                        phone: "+54 9 11 9876-5432",
-                        linkedin: "linkedin.com/in/sofia",
-                        location: "Buenos Aires, Argentina",
-                        summary: "Ingeniera de Software apasionada por el desarrollo backend."
-                    },
-                    experience: [
-                        { role: "Backend Lead", company: "TechGlobal", dates: "Presente", description: "• Microservicios en Go." }
-                    ],
-                    education: [ { degree: "Ingeniería Informática", school: "UBA", year: "2023" } ],
-                    languages: [ { language: "Inglés", level: "C1" } ],
-                    skills: "Golang, SQL, Docker"
+                    isPaid: false, isSidebarOpen: true,
+                    settings: { showPhoto: true, align: 'left' }, photo: null,
+                    personal: { name: "Sofía Martínez", email: "sofia@mail.com", phone: "+12345678", linkedin: "in/sofia", location: "CABA, AR", summary: "Desarrolladora Full Stack." },
+                    experience: [{ role: "Dev", company: "Tech", dates: "2022-Pres", description: "• React & Node." }],
+                    education: [{ degree: "Ingeniería", school: "UBA", year: "2023" }],
+                    languages: [{ language: "Inglés", level: "C1" }],
+                    skills: "JS, Python, AWS"
                 };
                 this.save();
                 this.renderForm();
@@ -315,157 +343,99 @@
                 document.getElementById('watermark').style.display = 'flex';
             },
 
-            updateField(section, field, value, index = null) {
-                if (index !== null) this.data[section][index][field] = value;
-                else if (typeof this.data[section] === 'object' && !Array.isArray(this.data[section])) this.data[section][field] = value;
-                else this.data[section] = value;
+            updateField(s, f, v, i = null) {
+                if(i !== null) this.data[s][i][f] = v;
+                else if(typeof this.data[s] === 'object' && !Array.isArray(this.data[s])) this.data[s][f] = v;
+                else this.data[s] = v;
                 this.save();
             },
             
-            addItem(section) {
-                let item;
-                if(section === 'experience') item = { role: '', company: '', dates: '', description: '' };
-                else if(section === 'education') item = { degree: '', school: '', year: '' };
-                else if(section === 'languages') item = { language: '', level: '' };
-                this.data[section].push(item);
-                this.save();
-                this.renderForm();
+            addItem(s) {
+                const item = s==='experience' ? {role:'',company:'',dates:'',description:''} : s==='education' ? {degree:'',school:'',year:''} : {language:'',level:''};
+                this.data[s].push(item); this.save(); this.renderForm();
             },
-
-            removeItem(section, index) {
-                this.data[section].splice(index, 1);
-                this.save();
-                this.renderForm();
-            },
+            removeItem(s, i) { this.data[s].splice(i, 1); this.save(); this.renderForm(); },
 
             renderForm() {
                 const s = this.data.settings;
-                const container = document.getElementById('form-container');
+                const c = document.getElementById('form-container');
                 let html = `
                     <div class="section-card">
-                        <div class="section-title">Diseño</div>
+                        <div class="section-title">Alineación y Foto</div>
                         <div class="align-group">
-                            <button class="align-btn ${s.align === 'left' ? 'active' : ''}" onclick="app.setAlign('left')"><i class="fas fa-align-left"></i></button>
-                            <button class="align-btn ${s.align === 'center' ? 'active' : ''}" onclick="app.setAlign('center')"><i class="fas fa-align-center"></i></button>
-                            <button class="align-btn ${s.align === 'right' ? 'active' : ''}" onclick="app.setAlign('right')"><i class="fas fa-align-right"></i></button>
-                        </div>
-                        <br>
-                        <div class="toggle-container">
-                            <label class="switch"><input type="checkbox" ${s.showPhoto ? 'checked' : ''} onchange="app.togglePhoto()"><span class="slider"></span></label>
-                            <span>Mostrar foto</span>
-                        </div>
+                            <button class="align-btn ${s.align==='left'?'active':''}" onclick="app.setAlign('left')"><i class="fas fa-align-left"></i></button>
+                            <button class="align-btn ${s.align==='center'?'active':''}" onclick="app.setAlign('center')"><i class="fas fa-align-center"></i></button>
+                            <button class="align-btn ${s.align==='right'?'active':''}" onclick="app.setAlign('right')"><i class="fas fa-align-right"></i></button>
+                        </div><br>
+                        <div class="toggle-container"><label class="switch"><input type="checkbox" ${s.showPhoto?'checked':''} onchange="app.togglePhoto()"><span class="slider"></span></label><span>Foto</span></div>
                         <input type="file" accept="image/*" onchange="app.handleImageUpload(event)" class="form-control">
                     </div>
-
-                    <div class="section-card">
-                        <div class="section-title">Datos Personales</div>
-                        <div class="form-group"><input class="form-control" placeholder="Nombre" value="${this.data.personal.name}" oninput="app.updateField('personal', 'name', this.value)"></div>
-                        <div class="form-group"><input class="form-control" placeholder="Ubicación" value="${this.data.personal.location}" oninput="app.updateField('personal', 'location', this.value)"></div>
-                        <div class="form-group"><input class="form-control" placeholder="Email" value="${this.data.personal.email}" oninput="app.updateField('personal', 'email', this.value)"></div>
-                        <div class="form-group"><input class="form-control" placeholder="Teléfono" value="${this.data.personal.phone}" oninput="app.updateField('personal', 'phone', this.value)"></div>
-                        <div class="form-group"><input class="form-control" placeholder="LinkedIn" value="${this.data.personal.linkedin}" oninput="app.updateField('personal', 'linkedin', this.value)"></div>
-                        <div class="form-group"><textarea class="form-control" placeholder="Perfil" oninput="app.updateField('personal', 'summary', this.value)">${this.data.personal.summary}</textarea></div>
-                    </div>
-                `;
-
-                html += `<div class="section-card"><div class="section-title">Experiencia <button class="btn btn-primary" onclick="app.addItem('experience')">+</button></div>`;
-                this.data.experience.forEach((item, index) => {
-                    html += `<div class="item-card"><i class="fas fa-times delete-btn" onclick="app.removeItem('experience', ${index})"></i>
-                        <div class="form-group"><input class="form-control" placeholder="Puesto" value="${item.role}" oninput="app.updateField('experience', 'role', this.value, ${index})"></div>
-                        <div class="form-group"><input class="form-control" placeholder="Empresa" value="${item.company}" oninput="app.updateField('experience', 'company', this.value, ${index})"></div>
-                        <div class="form-group"><input class="form-control" placeholder="Fechas" value="${item.dates}" oninput="app.updateField('experience', 'dates', this.value, ${index})"></div>
-                        <div class="form-group"><textarea class="form-control" placeholder="Descripción" oninput="app.updateField('experience', 'description', this.value, ${index})">${item.description}</textarea></div>
+                    <div class="section-card"><div class="section-title">Datos</div>
+                        <input class="form-control" placeholder="Nombre" value="${this.data.personal.name}" oninput="app.updateField('personal','name',this.value)">
+                        <input class="form-control" placeholder="Ubicación" value="${this.data.personal.location}" oninput="app.updateField('personal','location',this.value)">
+                        <input class="form-control" placeholder="Email" value="${this.data.personal.email}" oninput="app.updateField('personal','email',this.value)">
+                        <input class="form-control" placeholder="Teléfono" value="${this.data.personal.phone}" oninput="app.updateField('personal','phone',this.value)">
+                        <input class="form-control" placeholder="LinkedIn" value="${this.data.personal.linkedin}" oninput="app.updateField('personal','linkedin',this.value)">
+                        <textarea class="form-control" placeholder="Resumen" oninput="app.updateField('personal','summary',this.value)">${this.data.personal.summary}</textarea>
                     </div>`;
-                });
-                html += `</div>`;
 
-                html += `<div class="section-card"><div class="section-title">Educación <button class="btn btn-primary" onclick="app.addItem('education')">+</button></div>`;
-                this.data.education.forEach((item, index) => {
-                    html += `<div class="item-card"><i class="fas fa-times delete-btn" onclick="app.removeItem('education', ${index})"></i>
-                        <div class="form-group"><input class="form-control" placeholder="Título" value="${item.degree}" oninput="app.updateField('education', 'degree', this.value, ${index})"></div>
-                        <div class="form-group"><input class="form-control" placeholder="Institución" value="${item.school}" oninput="app.updateField('education', 'school', this.value, ${index})"></div>
-                        <div class="form-group"><input class="form-control" placeholder="Año" value="${item.year}" oninput="app.updateField('education', 'year', this.value, ${index})"></div>
-                    </div>`;
-                });
-                html += `</div>`;
+                // Loops simplificados para legibilidad
+                const sections = [
+                    {key:'experience', title:'Experiencia', fields:[{k:'role',p:'Puesto'},{k:'company',p:'Empresa'},{k:'dates',p:'Fechas'},{k:'description',p:'Descripción', tag:'textarea'}]},
+                    {key:'education', title:'Educación', fields:[{k:'degree',p:'Título'},{k:'school',p:'Institución'},{k:'year',p:'Año'}]},
+                    {key:'languages', title:'Idiomas', fields:[{k:'language',p:'Idioma'},{k:'level',p:'Nivel'}]}
+                ];
 
-                html += `<div class="section-card"><div class="section-title">Idiomas <button class="btn btn-primary" onclick="app.addItem('languages')">+</button></div>`;
-                this.data.languages.forEach((item, index) => {
-                    html += `<div class="item-card" style="display:flex; gap:10px"><i class="fas fa-times delete-btn" onclick="app.removeItem('languages', ${index})"></i>
-                        <div style="flex:1"><input class="form-control" placeholder="Idioma" value="${item.language}" oninput="app.updateField('languages', 'language', this.value, ${index})"></div>
-                        <div style="flex:1"><input class="form-control" placeholder="Nivel" value="${item.level}" oninput="app.updateField('languages', 'level', this.value, ${index})"></div>
-                    </div>`;
+                sections.forEach(sec => {
+                    html += `<div class="section-card"><div class="section-title">${sec.title} <button class="btn btn-primary" style="width:auto; padding:2px 8px" onclick="app.addItem('${sec.key}')">+</button></div>`;
+                    this.data[sec.key].forEach((item, idx) => {
+                        html += `<div class="item-card"><i class="fas fa-times delete-btn" onclick="app.removeItem('${sec.key}',${idx})"></i>`;
+                        sec.fields.forEach(f => {
+                            if(f.tag === 'textarea') html += `<textarea class="form-control" placeholder="${f.p}" oninput="app.updateField('${sec.key}','${f.k}',this.value,${idx})">${item[f.k]}</textarea>`;
+                            else html += `<input class="form-control" placeholder="${f.p}" value="${item[f.k]}" oninput="app.updateField('${sec.key}','${f.k}',this.value,${idx})">`;
+                        });
+                        html += `</div>`;
+                    });
+                    html += `</div>`;
                 });
-                html += `</div>`;
 
-                html += `<div class="section-card"><div class="section-title">Skills</div><textarea class="form-control" placeholder="Skills..." oninput="app.updateField('skills', null, this.value)">${this.data.skills}</textarea></div>`;
-                container.innerHTML = html;
+                html += `<div class="section-card"><div class="section-title">Skills</div><textarea class="form-control" oninput="app.updateField('skills',null,this.value)">${this.data.skills}</textarea></div>`;
+                c.innerHTML = html;
             },
 
             renderPreview() {
                 const p = this.data.personal;
                 const s = this.data.settings;
-                const formatList = (txt) => {
-                    if(!txt) return '';
-                    const lines = txt.split('\n').filter(l => l.trim());
-                    if(!lines.length) return '';
-                    return `<ul class="cv-list">${lines.map(l => `<li>${l.replace(/^[•-]\s*/, '')}</li>`).join('')}</ul>`;
-                };
-
-                let alignClass = 'header-left';
-                if (s.align === 'center') alignClass = 'header-center';
-                if (s.align === 'right') alignClass = 'header-right';
-
-                let html = `
-                    <div class="cv-header-container ${alignClass}">
-                        <div class="cv-photo-box ${s.showPhoto && this.data.photo ? 'visible' : ''}">
-                            <img src="${this.data.photo || ''}" alt="Foto CV">
-                        </div>
-                        <div class="cv-header-text">
-                            <div class="cv-name">${p.name || 'TU NOMBRE'}</div>
-                            <div class="cv-contact">
-                                ${p.location ? `${p.location}<br>` : ''}
-                                ${p.email ? `${p.email} | ` : ''} 
-                                ${p.phone ? `${p.phone}` : ''} <br>
-                                ${p.linkedin ? `${p.linkedin}` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                if(p.summary) html += `<div class="cv-section-title">Perfil Profesional</div><div class="cv-summary">${p.summary}</div>`;
+                const ul = (t) => t ? `<ul class="cv-list">${t.split('\n').filter(x=>x.trim()).map(x=>`<li>${x.replace(/^[•-]\s*/,'')}</li>`).join('')}</ul>` : '';
+                
+                let align = s.align==='center' ? 'header-center' : s.align==='right' ? 'header-right' : 'header-left';
+                let html = `<div class="cv-header-container ${align}">
+                    <div class="cv-photo-box ${s.showPhoto && this.data.photo ? 'visible' : ''}"><img src="${this.data.photo||''}"></div>
+                    <div class="cv-header-text"><div class="cv-name">${p.name||'NOMBRE'}</div><div class="cv-contact">${p.location?p.location+'<br>':''}${p.email?p.email+' | ':''}${p.phone||''}<br>${p.linkedin||''}</div></div>
+                </div>`;
+                
+                if(p.summary) html += `<div class="cv-section-title">Perfil</div><div class="cv-summary">${p.summary}</div>`;
                 
                 if(this.data.experience.length) {
-                    html += `<div class="cv-section-title">Experiencia Profesional</div>`;
-                    this.data.experience.forEach(e => {
-                        html += `<div class="cv-item">
-                            <div class="cv-item-header"><div><span class="cv-role">${e.role}</span>${e.company ? ` en <span class="cv-company">${e.company}</span>` : ''}</div><div class="cv-dates">${e.dates}</div></div>
-                            ${formatList(e.description)}
-                        </div>`;
-                    });
+                    html += `<div class="cv-section-title">Experiencia</div>` + this.data.experience.map(e => 
+                        `<div class="cv-item"><div class="cv-item-header"><div><span class="cv-role">${e.role}</span>${e.company?' en <span class="cv-company">'+e.company+'</span>':''}</div><div class="cv-dates">${e.dates}</div></div>${ul(e.description)}</div>`
+                    ).join('');
                 }
-
                 if(this.data.education.length) {
-                    html += `<div class="cv-section-title">Educación</div>`;
-                    this.data.education.forEach(e => {
-                        html += `<div class="cv-item"><div class="cv-item-header"><div class="cv-role">${e.degree}</div><div class="cv-dates">${e.year}</div></div><div>${e.school}</div></div>`;
-                    });
+                    html += `<div class="cv-section-title">Educación</div>` + this.data.education.map(e => 
+                        `<div class="cv-item"><div class="cv-item-header"><div class="cv-role">${e.degree}</div><div class="cv-dates">${e.year}</div></div><div>${e.school}</div></div>`
+                    ).join('');
                 }
-
                 if(this.data.languages.length) {
-                    html += `<div class="cv-section-title">Idiomas</div><ul class="cv-lang-list">`;
-                    this.data.languages.forEach(l => {
-                        html += `<li class="cv-lang-item"><span class="cv-lang-name">${l.language}:</span> ${l.level}</li>`;
-                    });
-                    html += `</ul>`;
+                    html += `<div class="cv-section-title">Idiomas</div><ul class="cv-lang-list">` + this.data.languages.map(l => 
+                        `<li class="cv-lang-item"><span class="cv-lang-name">${l.language}:</span> ${l.level}</li>`
+                    ).join('') + `</ul>`;
                 }
-
-                if(this.data.skills) html += `<div class="cv-section-title">Habilidades</div><div class="cv-summary">${this.data.skills}</div>`;
+                if(this.data.skills) html += `<div class="cv-section-title">Skills</div><div class="cv-summary">${this.data.skills}</div>`;
 
                 document.getElementById('resume-preview').innerHTML = html;
             }
         };
-
         app.init();
     </script>
 </body>
